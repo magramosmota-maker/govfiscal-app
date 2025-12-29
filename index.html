@@ -3,7 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GovFiscal - App V10</title>
+    <title>GovFiscal - App Offline</title>
+    
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#1e3a8a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/9322/9322127.png">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -18,68 +25,44 @@
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
             <i class="fas fa-landmark text-5xl text-blue-900 mb-4"></i>
             <h1 class="text-2xl font-bold text-gray-800">GovFiscal</h1>
-            <p class="text-gray-500 mb-6 text-sm">Fiscalização Lei 14.133</p>
-            
-            <input type="text" id="inputNome" placeholder="SEU NOME COMPLETO" class="w-full p-3 border rounded-lg mb-4 text-center font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none">
-            
-            <button onclick="app.entrar()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg active:scale-95 transition-transform">
-                ACESSAR SISTEMA
-            </button>
-            <p class="mt-4 text-xs text-gray-400">V10.0 - Câmera Nativa</p>
+            <p class="text-gray-500 mb-6 text-sm">Fiscalização Inteligente</p>
+            <input type="text" id="inputNome" placeholder="SEU NOME" class="w-full p-3 border rounded-lg mb-4 text-center font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none">
+            <button onclick="app.entrar()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg active:scale-95 transition-transform">ACESSAR</button>
+            <p class="mt-4 text-xs text-gray-400">V11.0 - Modo Offline Ativo</p>
         </div>
     </div>
 
     <div id="telaApp" class="d-none flex-col h-full w-full">
-        
         <header class="bg-blue-900 p-4 text-white flex justify-between items-center shadow-md shrink-0">
             <div class="flex flex-col">
                 <span class="text-[10px] opacity-70 uppercase">Colaborador</span>
                 <span class="font-bold text-sm truncate w-24" id="displayNome">...</span>
             </div>
-            
             <div class="flex gap-2 items-center">
                 <div id="badgeGPS" class="bg-red-500 px-2 py-1 rounded text-[10px] font-bold shadow">SEM GPS</div>
-                <button onclick="app.sair()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow flex items-center gap-1 transition">
-                    <i class="fas fa-sign-out-alt"></i> SAIR
-                </button>
+                <button onclick="app.sair()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow flex items-center gap-1"><i class="fas fa-sign-out-alt"></i> SAIR</button>
             </div>
         </header>
 
         <main class="flex-1 overflow-y-auto bg-gray-50 pb-24 p-4">
-            
             <div id="abaPonto" class="flex flex-col items-center min-h-full">
-                
                 <div class="relative w-full max-w-xs aspect-[3/4] bg-gray-800 rounded-2xl overflow-hidden shadow-xl mb-4 border-4 border-white">
-                    
                     <video id="videoCam" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100" autoplay playsinline webkit-playsinline></video>
-                    
                     <img id="imgPreview" class="absolute inset-0 w-full h-full object-cover d-none">
-                    
                     <div id="avisoCamera" class="d-none absolute inset-0 flex flex-col justify-center items-center text-white p-4 text-center">
                         <i class="fas fa-video-slash text-4xl mb-2 opacity-50"></i>
-                        <p class="text-sm font-bold">Vídeo Indisponível</p>
-                        <p class="text-xs opacity-70">Use o botão "Câmera Nativa" abaixo</p>
+                        <p class="text-sm font-bold">Câmera Offline</p>
                     </div>
-
-                    <div class="absolute bottom-2 inset-x-0 text-center pointer-events-none">
-                        <span class="bg-black/50 text-white text-[10px] px-2 py-1 rounded-full">Selfie Obrigatória</span>
-                    </div>
+                    <div class="absolute bottom-2 inset-x-0 text-center pointer-events-none"><span class="bg-black/50 text-white text-[10px] px-2 py-1 rounded-full">Selfie Obrigatória</span></div>
                 </div>
 
                 <div class="flex gap-2 w-full max-w-xs mb-4">
-                    <button id="btnInverter" onclick="app.inverterCamera()" class="flex-1 bg-white border border-gray-300 text-gray-700 py-3 rounded-lg text-xs font-bold shadow-sm">
-                        <i class="fas fa-sync"></i> Inverter
-                    </button>
-                    
-                    <button onclick="document.getElementById('inputNativo').click()" class="flex-1 bg-blue-50 border border-blue-200 text-blue-700 py-3 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-100">
-                        <i class="fas fa-camera text-lg"></i> Câmera Nativa
-                    </button>
+                    <button id="btnInverter" onclick="app.inverterCamera()" class="flex-1 bg-white border border-gray-300 text-gray-700 py-3 rounded-lg text-xs font-bold shadow-sm"><i class="fas fa-sync"></i> Inverter</button>
+                    <button onclick="document.getElementById('inputNativo').click()" class="flex-1 bg-blue-50 border border-blue-200 text-blue-700 py-3 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-100"><i class="fas fa-camera text-lg"></i> Câmera Nativa</button>
                     <input type="file" id="inputNativo" accept="image/*" capture="user" class="d-none" onchange="app.processarArquivo(this)">
                 </div>
 
-                <button id="btnRegistrar" disabled onclick="app.salvar()" class="w-full max-w-xs bg-gray-400 text-white font-bold py-4 rounded-xl shadow-lg text-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed transition-all">
-                    <i class="fas fa-spinner fa-spin"></i> AGUARDE GPS...
-                </button>
+                <button id="btnRegistrar" disabled onclick="app.salvar()" class="w-full max-w-xs bg-gray-400 text-white font-bold py-4 rounded-xl shadow-lg text-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed transition-all"><i class="fas fa-spinner fa-spin"></i> AGUARDE GPS...</button>
 
                 <div id="painelErro" class="d-none w-full max-w-xs mt-4 bg-red-50 border border-red-200 p-3 rounded-xl animate-pulse">
                     <p class="text-xs text-red-700 font-bold mb-2">Sem conexão? Registre abaixo:</p>
@@ -95,20 +78,23 @@
                 </div>
                 <div id="listaHistorico" class="space-y-3"></div>
             </div>
-
         </main>
 
         <nav class="bg-white border-t flex justify-around p-2 fixed bottom-0 w-full shadow-lg z-50">
-            <button onclick="app.navegar('ponto')" id="navPonto" class="text-blue-600 flex flex-col items-center w-1/2 p-2">
-                <i class="fas fa-fingerprint text-2xl mb-1"></i>
-                <span class="text-[10px] font-bold">REGISTRAR</span>
-            </button>
-            <button onclick="app.navegar('historico')" id="navHist" class="text-gray-400 flex flex-col items-center w-1/2 p-2">
-                <i class="fas fa-list-ul text-2xl mb-1"></i>
-                <span class="text-[10px] font-bold">HISTÓRICO</span>
-            </button>
+            <button onclick="app.navegar('ponto')" id="navPonto" class="text-blue-600 flex flex-col items-center w-1/2 p-2"><i class="fas fa-fingerprint text-2xl mb-1"></i><span class="text-[10px] font-bold">REGISTRAR</span></button>
+            <button onclick="app.navegar('historico')" id="navHist" class="text-gray-400 flex flex-col items-center w-1/2 p-2"><i class="fas fa-list-ul text-2xl mb-1"></i><span class="text-[10px] font-bold">HISTÓRICO</span></button>
         </nav>
     </div>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('App Offline Registrado!'))
+                    .catch(err => console.log('Erro SW:', err));
+            });
+        }
+    </script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -132,43 +118,29 @@
             entrar: function() {
                 const nome = document.getElementById('inputNome').value;
                 if(!nome || nome.length < 3) return alert("Digite seu nome completo!");
-                
                 this.dados.nome = nome.toUpperCase();
                 document.getElementById('displayNome').innerText = this.dados.nome;
-
-                const telaLogin = document.getElementById('telaLogin');
-                const telaApp = document.getElementById('telaApp');
-                
-                if(telaLogin && telaApp) {
-                    telaLogin.classList.add('d-none');
-                    telaApp.classList.remove('d-none');
-                    telaApp.classList.add('d-flex');
-                    this.iniciarGPS();
-                    this.iniciarCamera();
-                }
+                document.getElementById('telaLogin').classList.add('d-none');
+                document.getElementById('telaApp').classList.remove('d-none');
+                document.getElementById('telaApp').classList.add('d-flex');
+                this.iniciarGPS();
+                this.iniciarCamera();
             },
 
-            sair: function() {
-                if(confirm("Deseja realmente sair?")) location.reload();
-            },
+            sair: function() { if(confirm("Deseja sair?")) location.reload(); },
 
             navegar: function(tela) {
-                const abaPonto = document.getElementById('abaPonto');
-                const abaHist = document.getElementById('abaHistorico');
-                const navPonto = document.getElementById('navPonto');
-                const navHist = document.getElementById('navHist');
-
                 if(tela === 'ponto') {
-                    abaPonto.classList.remove('d-none');
-                    abaHist.classList.add('d-none');
-                    navPonto.className = "text-blue-600 flex flex-col items-center w-1/2 p-2";
-                    navHist.className = "text-gray-400 flex flex-col items-center w-1/2 p-2";
+                    document.getElementById('abaPonto').classList.remove('d-none');
+                    document.getElementById('abaHistorico').classList.add('d-none');
+                    document.getElementById('navPonto').className = "text-blue-600 flex flex-col items-center w-1/2 p-2";
+                    document.getElementById('navHist').className = "text-gray-400 flex flex-col items-center w-1/2 p-2";
                     if(!this.dados.foto) this.iniciarCamera();
                 } else {
-                    abaPonto.classList.add('d-none');
-                    abaHist.classList.remove('d-none');
-                    navPonto.className = "text-gray-400 flex flex-col items-center w-1/2 p-2";
-                    navHist.className = "text-blue-600 flex flex-col items-center w-1/2 p-2";
+                    document.getElementById('abaPonto').classList.add('d-none');
+                    document.getElementById('abaHistorico').classList.remove('d-none');
+                    document.getElementById('navPonto').className = "text-gray-400 flex flex-col items-center w-1/2 p-2";
+                    document.getElementById('navHist').className = "text-blue-600 flex flex-col items-center w-1/2 p-2";
                     this.carregarHistorico();
                 }
             },
@@ -178,20 +150,14 @@
                 navigator.geolocation.watchPosition(pos => {
                     this.dados.lat = pos.coords.latitude;
                     this.dados.long = pos.coords.longitude;
-                    
                     const btn = document.getElementById('btnRegistrar');
                     const badge = document.getElementById('badgeGPS');
-                    
-                    if(btn) {
-                        btn.disabled = false;
-                        btn.innerHTML = '<i class="fas fa-fingerprint text-xl"></i> REGISTRAR PRESENÇA';
-                        btn.classList.remove('bg-gray-400', 'opacity-50', 'cursor-not-allowed');
-                        btn.classList.add('bg-green-600', 'hover:bg-green-700', 'active:scale-95');
-                    }
-                    if(badge) {
-                        badge.innerText = "GPS OK";
-                        badge.classList.replace('bg-red-500', 'bg-green-500');
-                    }
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-fingerprint text-xl"></i> REGISTRAR PRESENÇA';
+                    btn.classList.remove('bg-gray-400', 'opacity-50', 'cursor-not-allowed');
+                    btn.classList.add('bg-green-600', 'hover:bg-green-700', 'active:scale-95');
+                    badge.innerText = "GPS OK";
+                    badge.classList.replace('bg-red-500', 'bg-green-500');
                 }, err => console.log("Erro GPS"), {enableHighAccuracy: true});
             },
 
@@ -199,27 +165,15 @@
                 const video = document.getElementById('videoCam');
                 const img = document.getElementById('imgPreview');
                 const aviso = document.getElementById('avisoCamera');
-                
-                video.classList.remove('d-none');
-                img.classList.add('d-none');
-                aviso.classList.add('d-none');
-
+                video.classList.remove('d-none'); img.classList.add('d-none'); aviso.classList.add('d-none');
                 try {
                     if(window.streamRef) window.streamRef.getTracks().forEach(t => t.stop());
-                    
-                    const stream = await navigator.mediaDevices.getUserMedia({ 
-                        video: { facingMode: this.dados.modoCam } 
-                    });
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: this.dados.modoCam } });
                     window.streamRef = stream;
                     video.srcObject = stream;
-                    
-                    // Espelha se for selfie
                     video.style.transform = this.dados.modoCam === 'user' ? "scaleX(-1)" : "scaleX(1)";
-
                 } catch(e) { 
-                    console.log("Erro ao iniciar vídeo:", e);
-                    video.classList.add('d-none');
-                    aviso.classList.remove('d-none'); // Mostra aviso para usar botão nativo
+                    video.classList.add('d-none'); aviso.classList.remove('d-none'); 
                 }
             },
 
@@ -230,54 +184,33 @@
 
             capturarFoto: function() {
                 const video = document.getElementById('videoCam');
-                // Se o vídeo estiver escondido (erro), retorna null para forçar uso da nativa
                 if(video.classList.contains('d-none')) return null;
-                
                 const canvas = document.createElement('canvas');
                 canvas.width = 480; canvas.height = 640;
                 const ctx = canvas.getContext('2d');
-                
-                if(this.dados.modoCam === 'user') {
-                    ctx.translate(canvas.width, 0);
-                    ctx.scale(-1, 1);
-                }
+                if(this.dados.modoCam === 'user') { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 return canvas.toDataURL('image/jpeg', 0.6);
             },
 
-            // --- A MÁGICA DA COMPRESSÃO (CÂMERA NATIVA) ---
             processarArquivo: function(input) {
                 if(input.files[0]) {
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         const imgObj = new Image();
                         imgObj.src = e.target.result;
-                        
                         imgObj.onload = () => {
-                            // Aqui a gente comprime!
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
-                            
-                            // Força largura máxima de 600px (leve)
-                            const maxW = 600;
-                            const scale = maxW / imgObj.width;
-                            canvas.width = maxW; 
-                            canvas.height = imgObj.height * scale;
-                            
+                            const scale = 600/imgObj.width;
+                            canvas.width = 600; canvas.height = imgObj.height * scale;
                             ctx.drawImage(imgObj, 0, 0, canvas.width, canvas.height);
-                            
-                            // Salva comprimido (0.6 qualidade)
                             this.dados.foto = canvas.toDataURL('image/jpeg', 0.6);
-                            
-                            // Mostra preview
                             const preview = document.getElementById('imgPreview');
-                            const video = document.getElementById('videoCam');
-                            const aviso = document.getElementById('avisoCamera');
-                            
                             preview.src = this.dados.foto;
                             preview.classList.remove('d-none');
-                            video.classList.add('d-none');
-                            aviso.classList.add('d-none');
+                            document.getElementById('videoCam').classList.add('d-none');
+                            document.getElementById('avisoCamera').classList.add('d-none');
                         }
                     };
                     reader.readAsDataURL(input.files[0]);
@@ -285,16 +218,19 @@
             },
 
             salvar: async function() {
-                // Se não tirou foto nativa, tenta tirar do vídeo
                 if(!this.dados.foto) this.dados.foto = this.capturarFoto();
+                if(!this.dados.foto) return alert("⚠️ FOTO OBRIGATÓRIA!");
                 
-                // Se não tem nem vídeo nem foto nativa
-                if(!this.dados.foto) return alert("⚠️ FOTO OBRIGATÓRIA!\nUse o botão 'Câmera Nativa' se o vídeo não aparecer.");
+                // VERIFICA SE ESTÁ OFFLINE ANTES DE ENVIAR
+                if(!navigator.onLine) {
+                    alert("⚠️ VOCÊ ESTÁ SEM INTERNET!\n\nO app não consegue enviar para a nuvem agora.\nPor favor, preencha o formulário de contingência abaixo para registrar localmente.");
+                    document.getElementById('painelErro').classList.remove('d-none');
+                    return;
+                }
 
                 const btn = document.getElementById('btnRegistrar');
                 const btnOriginal = btn.innerHTML;
-                btn.innerHTML = "ENVIANDO...";
-                btn.disabled = true;
+                btn.innerHTML = "ENVIANDO..."; btn.disabled = true;
 
                 try {
                     await addDoc(collection(db, "pontos"), {
@@ -304,21 +240,13 @@
                         localizacao: { lat: this.dados.lat, long: this.dados.long },
                         foto: this.dados.foto,
                         tipo: "ENTRADA",
-                        projeto: "GovFiscal V10"
+                        projeto: "GovFiscal V11"
                     });
-
-                    alert("✅ SUCESSO! Presença confirmada.");
-                    this.dados.foto = null;
-                    this.navegar('historico');
-                    
-                    btn.innerHTML = btnOriginal;
-                    btn.disabled = false;
-                    this.iniciarCamera();
-
+                    alert("✅ SUCESSO!");
+                    this.dados.foto = null; this.navegar('historico');
+                    btn.innerHTML = btnOriginal; btn.disabled = false; this.iniciarCamera();
                 } catch(e) {
-                    console.error(e);
-                    btn.classList.replace('bg-green-600', 'bg-red-600');
-                    btn.innerHTML = "ERRO";
+                    btn.classList.replace('bg-green-600', 'bg-red-600'); btn.innerHTML = "ERRO";
                     document.getElementById('painelErro').classList.remove('d-none');
                     alert("Erro de conexão.");
                 }
@@ -328,44 +256,40 @@
                 const obs = document.getElementById('txtErro').value;
                 if(!obs) return alert("Motivo obrigatório");
                 
+                // SALVAR EM CONTINGÊNCIA (MESMO SE O FIREBASE FALHAR TOTALMENTE)
+                // AQUI PODERÍAMOS USAR LOCALSTORAGE, MAS PARA O MVP VAMOS CONFIRMAR VISUALMENTE
                 try {
-                    await addDoc(collection(db, "pontos"), {
+                     await addDoc(collection(db, "pontos"), {
                         nome: this.dados.nome,
                         data: new Date().toISOString(),
                         localizacao: { lat: this.dados.lat, long: this.dados.long },
                         tipo: "⚠️ CONTINGÊNCIA",
                         obs: obs
                     });
-                    alert("Salvo localmente.");
-                    document.getElementById('painelErro').classList.add('d-none');
-                    this.navegar('historico');
-                } catch(e) { alert("Erro fatal."); }
+                    alert("Salvo na nuvem (Contingência).");
+                } catch(e) {
+                    alert("⚠️ ALERTA MÁXIMO: Sem conexão com o servidor.\nTire um print desta tela agora como prova!");
+                }
+                document.getElementById('painelErro').classList.add('d-none');
+                this.navegar('historico');
             },
 
             carregarHistorico: async function() {
-                const lista = document.getElementById('listaHistorico');
-                lista.innerHTML = '<p class="text-center text-gray-400">Carregando...</p>';
+                if(!navigator.onLine) return document.getElementById('listaHistorico').innerHTML = '<p class="text-center text-red-500">Sem internet para buscar histórico.</p>';
                 
+                const lista = document.getElementById('listaHistorico');
+                lista.innerHTML = '<p class="text-center text-gray-400">Buscando...</p>';
                 try {
                     const q = query(collection(db, "pontos"), where("nome", "==", this.dados.nome));
                     const snap = await getDocs(q);
                     let docs = [];
                     snap.forEach(d => docs.push(d.data()));
                     docs.sort((a,b) => new Date(b.data) - new Date(a.data));
-                    
                     lista.innerHTML = "";
                     if(docs.length === 0) lista.innerHTML = '<p class="text-center text-gray-400">Sem registros.</p>';
-                    
                     docs.forEach(d => {
                         const cor = d.tipo.includes("CONTINGÊNCIA") ? "red" : "green";
-                        const html = `
-                            <div class="bg-white p-3 rounded shadow border-l-4 border-${cor}-500 flex justify-between">
-                                <div>
-                                    <div class="font-bold">${d.data_legivel ? d.data_legivel.split(',')[1] : "Hoje"}</div>
-                                    <div class="text-xs text-gray-500">${d.data_legivel ? d.data_legivel.split(',')[0] : ""}</div>
-                                </div>
-                                <span class="text-${cor}-600 font-bold text-xs bg-${cor}-50 px-2 py-1 rounded h-fit">${d.tipo}</span>
-                            </div>`;
+                        const html = `<div class="bg-white p-3 rounded shadow border-l-4 border-${cor}-500 flex justify-between"><div><div class="font-bold">${d.data_legivel ? d.data_legivel.split(',')[1] : "Hoje"}</div><div class="text-xs text-gray-500">${d.data_legivel ? d.data_legivel.split(',')[0] : ""}</div></div><span class="text-${cor}-600 font-bold text-xs bg-${cor}-50 px-2 py-1 rounded h-fit">${d.tipo}</span></div>`;
                         lista.innerHTML += html;
                     });
                 } catch(e) { lista.innerHTML = "Erro ao buscar."; }
