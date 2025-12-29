@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GovFiscal - V17 AutoSync</title>
+    <title>GovFiscal - V18 Blindada</title>
     
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#1e3a8a">
@@ -16,37 +16,20 @@
         .d-flex { display: flex !important; }
         body { overflow: hidden; } 
         
-        /* Toast de Notificação */
         #toast {
-            visibility: hidden;
-            min-width: 250px;
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            border-radius: 8px;
-            padding: 16px;
-            position: fixed;
-            z-index: 100;
-            left: 50%;
-            top: 30px;
-            transform: translateX(-50%);
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            opacity: 0;
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center;
+            border-radius: 8px; padding: 16px; position: fixed; z-index: 100; left: 50%; top: 30px;
+            transform: translateX(-50%); font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0;
             transition: opacity 0.5s, top 0.5s;
         }
-        #toast.show {
-            visibility: visible;
-            opacity: 1;
-            top: 50px;
-        }
-        #toast.success { background-color: #166534; } /* Verde */
-        #toast.sync { background-color: #ca8a04; } /* Amarelo */
+        #toast.show { visibility: visible; opacity: 1; top: 50px; }
+        #toast.success { background-color: #166534; }
+        #toast.sync { background-color: #ca8a04; }
     </style>
 </head>
 <body class="bg-gray-100 font-sans h-screen w-screen flex flex-col">
 
-    <div id="toast"><i class="fas fa-info-circle"></i> <span>Notificação</span></div>
+    <div id="toast"><i class="fas fa-info-circle"></i> <span>Aviso</span></div>
 
     <div id="telaLogin" class="fixed inset-0 bg-blue-900 z-50 flex flex-col justify-center items-center p-6">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
@@ -55,7 +38,7 @@
             <p class="text-gray-500 mb-6 text-sm">Fiscalização Inteligente</p>
             <input type="text" id="inputNome" placeholder="SEU NOME" class="w-full p-3 border rounded-lg mb-4 text-center font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none">
             <button onclick="app.entrar()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg active:scale-95 transition-transform">ACESSAR</button>
-            <p class="mt-4 text-xs text-gray-400">V17.0 - Envio Automático</p>
+            <p class="mt-4 text-xs text-gray-400">V18.0 - Anti-Falha</p>
         </div>
     </div>
 
@@ -70,7 +53,6 @@
 
         <main class="flex-1 overflow-y-auto bg-gray-50 pb-32 p-4">
             <div id="abaPonto" class="flex flex-col items-center min-h-full">
-                
                 <div class="relative w-full max-w-xs aspect-[3/4] bg-gray-800 rounded-2xl overflow-hidden shadow-xl mb-4 border-4 border-white">
                     <video id="videoCam" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100" autoplay playsinline webkit-playsinline></video>
                     <img id="imgPreview" class="absolute inset-0 w-full h-full object-cover d-none">
@@ -90,13 +72,20 @@
 
                 <div id="painelErro" class="d-none w-full max-w-xs mt-6 bg-yellow-50 border-2 border-yellow-500 p-4 rounded-xl shadow-2xl">
                     <h3 class="text-yellow-800 font-black text-lg mb-2 flex items-center gap-2"><i class="fas fa-wifi"></i> SEM INTERNET</h3>
-                    <p class="text-sm text-yellow-700 mb-3 font-semibold">Preencha abaixo para salvar no celular (envio automático depois):</p>
+                    <p class="text-sm text-yellow-700 mb-3 font-semibold">O sistema salvará no celular.</p>
                     <textarea id="txtErro" class="w-full p-3 text-base border-2 border-yellow-300 rounded-lg mb-4" rows="3" placeholder="Motivo (ex: sem sinal)"></textarea>
                     <button onclick="app.salvarLocalmente()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 rounded-lg shadow-lg text-lg">SALVAR NO CELULAR</button>
                 </div>
             </div>
 
             <div id="abaHistorico" class="d-none w-full max-w-md mx-auto">
+                <div id="boxSync" class="d-none mb-4 bg-yellow-100 border-l-4 border-yellow-500 p-4 rounded shadow-md">
+                    <div class="flex justify-between items-center">
+                        <div><p class="font-bold text-yellow-800">Sincronizando...</p><p class="text-xs text-yellow-700">Aguarde o envio automático.</p></div>
+                        <i class="fas fa-sync fa-spin text-yellow-600"></i>
+                    </div>
+                </div>
+
                 <div class="flex justify-between items-center mb-4 border-b pb-2">
                     <h2 class="font-bold text-gray-700">Meus Registros</h2>
                     <button onclick="app.carregarHistorico()" class="text-xs bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-bold">Atualizar</button>
@@ -111,33 +100,17 @@
         </nav>
     </div>
 
-    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister())); }</script>
+    <script>
+        // Limpeza de cache antigo
+        if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister())); }
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAwUWRaGbXvjc1NwfnwzDJGCU5EdCK6mcI",
-            authDomain: "govfiscal2.firebaseapp.com",
-            projectId: "govfiscal2",
-            storageBucket: "govfiscal2.firebasestorage.app",
-            messagingSenderId: "1025741103658",
-            appId: "1:1025741103658:web:aceee319dea96270bd5953"
-        };
-
-        const fApp = initializeApp(firebaseConfig);
-        const db = getFirestore(fApp);
-
-        // --- SISTEMA DE TOAST (NOTIFICAÇÃO) ---
         function showToast(msg, type = 'info') {
             const t = document.getElementById('toast');
-            t.className = type; // success or sync
-            t.innerHTML = msg;
-            t.classList.add('show');
+            t.className = type; t.innerHTML = msg; t.classList.add('show');
             setTimeout(() => { t.classList.remove('show'); }, 4000);
         }
 
+        // Definindo o APP globalmente
         window.app = {
             dados: { lat: 0, long: 0, nome: "", foto: null, modoCam: "user" },
             
@@ -151,11 +124,12 @@
                 document.getElementById('telaApp').classList.add('d-flex');
                 this.iniciarGPS();
                 this.iniciarCamera();
-                
-                // Tenta sincronizar ao entrar se tiver internet
-                if(navigator.onLine) this.autoSync();
+                // Tenta sincronizar se o Firebase já tiver carregado
+                if(window.db && navigator.onLine) this.autoSync();
             },
+
             sair: function() { if(confirm("Deseja sair?")) location.reload(); },
+
             navegar: function(tela) {
                 if(tela === 'ponto') {
                     document.getElementById('abaPonto').classList.remove('d-none');
@@ -171,6 +145,7 @@
                     this.carregarHistorico();
                 }
             },
+
             iniciarGPS: function() {
                 if(!navigator.geolocation) return alert("Sem GPS");
                 navigator.geolocation.watchPosition(pos => {
@@ -182,27 +157,28 @@
                     btn.innerHTML = '<i class="fas fa-fingerprint text-xl"></i> REGISTRAR PRESENÇA';
                     btn.classList.remove('bg-gray-400', 'opacity-50', 'cursor-not-allowed');
                     btn.classList.add('bg-green-600', 'hover:bg-green-700', 'active:scale-95');
-                    badge.innerText = "GPS OK";
-                    badge.classList.replace('bg-red-500', 'bg-green-500');
+                    badge.innerText = "GPS OK"; badge.classList.replace('bg-red-500', 'bg-green-500');
                 }, err => console.log("Erro GPS"), {enableHighAccuracy: true});
             },
+
             iniciarCamera: async function() {
                 const video = document.getElementById('videoCam');
                 const aviso = document.getElementById('avisoCamera');
                 video.classList.remove('d-none'); aviso.classList.add('d-none');
-                if(!navigator.onLine) { video.classList.add('d-none'); } 
+                if(!navigator.onLine) video.classList.add('d-none'); 
                 try {
                     if(window.streamRef) window.streamRef.getTracks().forEach(t => t.stop());
                     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: this.dados.modoCam } });
-                    window.streamRef = stream;
-                    video.srcObject = stream;
+                    window.streamRef = stream; video.srcObject = stream;
                     video.style.transform = this.dados.modoCam === 'user' ? "scaleX(-1)" : "scaleX(1)";
                 } catch(e) { video.classList.add('d-none'); aviso.classList.remove('d-none'); }
             },
+
             inverterCamera: function() {
                 this.dados.modoCam = this.dados.modoCam === 'user' ? 'environment' : 'user';
                 this.iniciarCamera();
             },
+
             capturarFoto: function() {
                 const video = document.getElementById('videoCam');
                 if(video.classList.contains('d-none')) return null;
@@ -213,6 +189,7 @@
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 return canvas.toDataURL('image/jpeg', 0.6);
             },
+
             processarArquivo: function(input) {
                 if(input.files[0]) {
                     const reader = new FileReader();
@@ -222,10 +199,167 @@
                         imgObj.onload = () => {
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
-                            const scale = 600/imgObj.width;
-                            canvas.width = 600; canvas.height = imgObj.height * scale;
+                            const scale = 600/imgObj.width; canvas.width = 600; canvas.height = imgObj.height * scale;
                             ctx.drawImage(imgObj, 0, 0, canvas.width, canvas.height);
                             this.dados.foto = canvas.toDataURL('image/jpeg', 0.6);
                             const preview = document.getElementById('imgPreview');
-                            preview.src = this.dados.foto;
-                            preview.classList.remove('d-none');
+                            preview.src = this.dados.foto; preview.classList.remove('d-none');
+                            document.getElementById('videoCam').classList.add('d-none');
+                            document.getElementById('avisoCamera').classList.add('d-none');
+                        }
+                    };
+                    reader.readAsDataURL(input.files[0]);
+                }
+            },
+
+            salvar: async function() {
+                if(!this.dados.foto) this.dados.foto = this.capturarFoto();
+                if(!this.dados.foto) return alert("⚠️ FOTO OBRIGATÓRIA!");
+
+                // Se não tiver Firebase carregado ou sem net -> Local
+                if(!window.db || !navigator.onLine) {
+                    this.abrirPainelOffline();
+                    return;
+                }
+
+                const btn = document.getElementById('btnRegistrar');
+                const btnOriginal = btn.innerHTML;
+                btn.innerHTML = "ENVIANDO..."; btn.disabled = true;
+
+                try {
+                    await window.addDoc(window.collection(window.db, "pontos"), {
+                        nome: this.dados.nome,
+                        data: new Date().toISOString(),
+                        data_legivel: new Date().toLocaleString('pt-BR'),
+                        localizacao: { lat: this.dados.lat, long: this.dados.long },
+                        foto: this.dados.foto,
+                        tipo: "ENTRADA",
+                        projeto: "GovFiscal V18"
+                    });
+                    showToast("✅ Registro Salvo!", "success");
+                    this.dados.foto = null; this.navegar('historico');
+                    btn.innerHTML = btnOriginal; btn.disabled = false; this.iniciarCamera();
+                } catch(e) {
+                    btn.classList.replace('bg-green-600', 'bg-red-600'); btn.innerHTML = "FALHA";
+                    this.abrirPainelOffline();
+                }
+            },
+
+            abrirPainelOffline: function() {
+                const painel = document.getElementById('painelErro');
+                painel.classList.remove('d-none');
+                setTimeout(() => { painel.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 500);
+                alert("Sem conexão com o servidor. Salve no celular.");
+            },
+
+            salvarLocalmente: function() {
+                const obs = document.getElementById('txtErro').value;
+                if(!obs) return alert("Motivo obrigatório");
+                
+                const registro = {
+                    nome: this.dados.nome,
+                    data: new Date().toISOString(),
+                    data_legivel: new Date().toLocaleString('pt-BR'),
+                    localizacao: { lat: this.dados.lat, long: this.dados.long },
+                    tipo: "⚠️ PENDENTE",
+                    obs: obs,
+                    foto: "Salva no Aparelho"
+                };
+                localStorage.setItem('govfiscal_offline_' + Date.now(), JSON.stringify(registro));
+                showToast("💾 Salvo no Celular", "sync");
+                document.getElementById('painelErro').classList.add('d-none');
+                this.navegar('historico');
+            },
+
+            autoSync: async function() {
+                if(!window.db || !navigator.onLine) return;
+                
+                let itens = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('govfiscal_offline_')) {
+                        itens.push({key: key, data: JSON.parse(localStorage.getItem(key))});
+                    }
+                }
+                if(itens.length === 0) return;
+
+                showToast(`🔄 Sincronizando...`, "sync");
+                for(let item of itens) {
+                    try {
+                        await window.addDoc(window.collection(window.db, "pontos"), {
+                            nome: item.data.nome,
+                            data: item.data.data, data_legivel: item.data.data_legivel,
+                            localizacao: item.data.localizacao,
+                            tipo: "⚠️ CONTINGÊNCIA (Sincronizado)",
+                            obs: item.data.obs
+                        });
+                        localStorage.removeItem(item.key);
+                    } catch(e) {}
+                }
+                showToast("✅ Sincronizado!", "success");
+                this.carregarHistorico();
+            },
+
+            carregarHistorico: async function() {
+                const lista = document.getElementById('listaHistorico');
+                if(navigator.onLine && window.db) this.autoSync();
+
+                lista.innerHTML = '<p class="text-center text-gray-400">Buscando...</p>';
+                let docs = [];
+
+                // Local
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('govfiscal_offline_')) {
+                        const item = JSON.parse(localStorage.getItem(key));
+                        if(item.nome === this.dados.nome) docs.push(item);
+                    }
+                }
+
+                // Online
+                if(navigator.onLine && window.db) {
+                    try {
+                        const q = window.query(window.collection(window.db, "pontos"), window.where("nome", "==", this.dados.nome));
+                        const snap = await window.getDocs(q);
+                        snap.forEach(d => docs.push(d.data()));
+                    } catch(e) {}
+                }
+
+                docs.sort((a,b) => new Date(b.data) - new Date(a.data));
+                lista.innerHTML = "";
+                if(docs.length === 0) lista.innerHTML = '<p class="text-center text-gray-400">Sem registros.</p>';
+
+                docs.forEach(d => {
+                    const isPendente = d.tipo.includes("PENDENTE");
+                    const isSync = d.tipo.includes("Sincronizado");
+                    let cor = "green"; let icone = "fa-check-circle";
+                    if(isPendente) { cor = "yellow"; icone = "fa-clock"; }
+                    if(isSync) { cor = "orange"; icone = "fa-cloud-upload-alt"; }
+
+                    const html = `
+                        <div class="bg-white p-3 rounded shadow border-l-4 border-${cor}-500 flex justify-between items-center fade-in">
+                            <div>
+                                <div class="font-bold text-gray-800">${d.data_legivel ? d.data_legivel.split(',')[1] : "Hoje"}</div>
+                                <div class="text-xs text-gray-500">${d.data_legivel ? d.data_legivel.split(',')[0] : ""}</div>
+                            </div>
+                            <span class="text-${cor}-700 font-bold text-[10px] bg-${cor}-100 px-2 py-1 rounded flex items-center gap-1">
+                                <i class="fas ${icone}"></i> ${d.tipo.split(' ')[0]}
+                            </span>
+                        </div>`;
+                    lista.innerHTML += html;
+                });
+            }
+        };
+
+        // ESCUTAR QUANDO A NET VOLTA
+        window.addEventListener('online', () => { app.autoSync(); });
+    </script>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAwUWRaGbXvjc1NwfnwzDJGCU5EdCK6mcI",
+            authDomain: "govfiscal2.firebaseapp.com",
+            projectId: "govfiscal2
