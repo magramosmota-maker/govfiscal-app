@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GovFiscal - App Oficial</title>
+    <title>GovFiscal - App V10</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -25,7 +25,7 @@
             <button onclick="app.entrar()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg active:scale-95 transition-transform">
                 ACESSAR SISTEMA
             </button>
-            <p class="mt-4 text-xs text-gray-400">Sistema Online</p>
+            <p class="mt-4 text-xs text-gray-400">V10.0 - Câmera Nativa</p>
         </div>
     </div>
 
@@ -39,7 +39,6 @@
             
             <div class="flex gap-2 items-center">
                 <div id="badgeGPS" class="bg-red-500 px-2 py-1 rounded text-[10px] font-bold shadow">SEM GPS</div>
-                
                 <button onclick="app.sair()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow flex items-center gap-1 transition">
                     <i class="fas fa-sign-out-alt"></i> SAIR
                 </button>
@@ -50,22 +49,32 @@
             
             <div id="abaPonto" class="flex flex-col items-center min-h-full">
                 
-                <div class="relative w-full max-w-xs aspect-[3/4] bg-black rounded-2xl overflow-hidden shadow-xl mb-4 border-4 border-white">
+                <div class="relative w-full max-w-xs aspect-[3/4] bg-gray-800 rounded-2xl overflow-hidden shadow-xl mb-4 border-4 border-white">
+                    
                     <video id="videoCam" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100" autoplay playsinline webkit-playsinline></video>
+                    
                     <img id="imgPreview" class="absolute inset-0 w-full h-full object-cover d-none">
+                    
+                    <div id="avisoCamera" class="d-none absolute inset-0 flex flex-col justify-center items-center text-white p-4 text-center">
+                        <i class="fas fa-video-slash text-4xl mb-2 opacity-50"></i>
+                        <p class="text-sm font-bold">Vídeo Indisponível</p>
+                        <p class="text-xs opacity-70">Use o botão "Câmera Nativa" abaixo</p>
+                    </div>
+
                     <div class="absolute bottom-2 inset-x-0 text-center pointer-events-none">
                         <span class="bg-black/50 text-white text-[10px] px-2 py-1 rounded-full">Selfie Obrigatória</span>
                     </div>
                 </div>
 
                 <div class="flex gap-2 w-full max-w-xs mb-4">
-                    <button onclick="app.inverterCamera()" class="flex-1 bg-white border border-gray-300 text-gray-700 py-2 rounded-lg text-xs font-bold shadow-sm">
+                    <button id="btnInverter" onclick="app.inverterCamera()" class="flex-1 bg-white border border-gray-300 text-gray-700 py-3 rounded-lg text-xs font-bold shadow-sm">
                         <i class="fas fa-sync"></i> Inverter
                     </button>
-                    <button onclick="document.getElementById('fileInput').click()" class="flex-1 bg-white border border-blue-200 text-blue-700 py-2 rounded-lg text-xs font-bold shadow-sm">
-                        <i class="fas fa-upload"></i> Arquivo
+                    
+                    <button onclick="document.getElementById('inputNativo').click()" class="flex-1 bg-blue-50 border border-blue-200 text-blue-700 py-3 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-100">
+                        <i class="fas fa-camera text-lg"></i> Câmera Nativa
                     </button>
-                    <input type="file" id="fileInput" accept="image/*" class="d-none" onchange="app.processarArquivo(this)">
+                    <input type="file" id="inputNativo" accept="image/*" capture="user" class="d-none" onchange="app.processarArquivo(this)">
                 </div>
 
                 <button id="btnRegistrar" disabled onclick="app.salvar()" class="w-full max-w-xs bg-gray-400 text-white font-bold py-4 rounded-xl shadow-lg text-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed transition-all">
@@ -189,8 +198,11 @@
             iniciarCamera: async function() {
                 const video = document.getElementById('videoCam');
                 const img = document.getElementById('imgPreview');
+                const aviso = document.getElementById('avisoCamera');
+                
                 video.classList.remove('d-none');
                 img.classList.add('d-none');
+                aviso.classList.add('d-none');
 
                 try {
                     if(window.streamRef) window.streamRef.getTracks().forEach(t => t.stop());
@@ -204,7 +216,11 @@
                     // Espelha se for selfie
                     video.style.transform = this.dados.modoCam === 'user' ? "scaleX(-1)" : "scaleX(1)";
 
-                } catch(e) { console.log("Erro Cam"); }
+                } catch(e) { 
+                    console.log("Erro ao iniciar vídeo:", e);
+                    video.classList.add('d-none');
+                    aviso.classList.remove('d-none'); // Mostra aviso para usar botão nativo
+                }
             },
 
             inverterCamera: function() {
@@ -214,6 +230,7 @@
 
             capturarFoto: function() {
                 const video = document.getElementById('videoCam');
+                // Se o vídeo estiver escondido (erro), retorna null para forçar uso da nativa
                 if(video.classList.contains('d-none')) return null;
                 
                 const canvas = document.createElement('canvas');
@@ -228,24 +245,39 @@
                 return canvas.toDataURL('image/jpeg', 0.6);
             },
 
+            // --- A MÁGICA DA COMPRESSÃO (CÂMERA NATIVA) ---
             processarArquivo: function(input) {
                 if(input.files[0]) {
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         const imgObj = new Image();
                         imgObj.src = e.target.result;
+                        
                         imgObj.onload = () => {
+                            // Aqui a gente comprime!
                             const canvas = document.createElement('canvas');
                             const ctx = canvas.getContext('2d');
-                            const scale = 600/imgObj.width;
-                            canvas.width = 600; canvas.height = imgObj.height * scale;
+                            
+                            // Força largura máxima de 600px (leve)
+                            const maxW = 600;
+                            const scale = maxW / imgObj.width;
+                            canvas.width = maxW; 
+                            canvas.height = imgObj.height * scale;
+                            
                             ctx.drawImage(imgObj, 0, 0, canvas.width, canvas.height);
                             
+                            // Salva comprimido (0.6 qualidade)
                             this.dados.foto = canvas.toDataURL('image/jpeg', 0.6);
+                            
+                            // Mostra preview
                             const preview = document.getElementById('imgPreview');
+                            const video = document.getElementById('videoCam');
+                            const aviso = document.getElementById('avisoCamera');
+                            
                             preview.src = this.dados.foto;
                             preview.classList.remove('d-none');
-                            document.getElementById('videoCam').classList.add('d-none');
+                            video.classList.add('d-none');
+                            aviso.classList.add('d-none');
                         }
                     };
                     reader.readAsDataURL(input.files[0]);
@@ -253,8 +285,11 @@
             },
 
             salvar: async function() {
+                // Se não tirou foto nativa, tenta tirar do vídeo
                 if(!this.dados.foto) this.dados.foto = this.capturarFoto();
-                if(!this.dados.foto) return alert("⚠️ FOTO OBRIGATÓRIA!");
+                
+                // Se não tem nem vídeo nem foto nativa
+                if(!this.dados.foto) return alert("⚠️ FOTO OBRIGATÓRIA!\nUse o botão 'Câmera Nativa' se o vídeo não aparecer.");
 
                 const btn = document.getElementById('btnRegistrar');
                 const btnOriginal = btn.innerHTML;
@@ -269,10 +304,10 @@
                         localizacao: { lat: this.dados.lat, long: this.dados.long },
                         foto: this.dados.foto,
                         tipo: "ENTRADA",
-                        projeto: "GovFiscal V9"
+                        projeto: "GovFiscal V10"
                     });
 
-                    alert("✅ SUCESSO!");
+                    alert("✅ SUCESSO! Presença confirmada.");
                     this.dados.foto = null;
                     this.navegar('historico');
                     
