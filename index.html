@@ -3,14 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GovFiscal - App Offline</title>
+    <title>GovFiscal V12</title>
     
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#1e3a8a">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/9322/9322127.png">
-
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -28,16 +26,13 @@
             <p class="text-gray-500 mb-6 text-sm">Fiscalização Inteligente</p>
             <input type="text" id="inputNome" placeholder="SEU NOME" class="w-full p-3 border rounded-lg mb-4 text-center font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none">
             <button onclick="app.entrar()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg active:scale-95 transition-transform">ACESSAR</button>
-            <p class="mt-4 text-xs text-gray-400">V11.0 - Modo Offline Ativo</p>
+            <p class="mt-4 text-xs text-gray-400">V12.0 - Offline Ready</p>
         </div>
     </div>
 
     <div id="telaApp" class="d-none flex-col h-full w-full">
         <header class="bg-blue-900 p-4 text-white flex justify-between items-center shadow-md shrink-0">
-            <div class="flex flex-col">
-                <span class="text-[10px] opacity-70 uppercase">Colaborador</span>
-                <span class="font-bold text-sm truncate w-24" id="displayNome">...</span>
-            </div>
+            <div class="flex flex-col"><span class="text-[10px] opacity-70 uppercase">Colaborador</span><span class="font-bold text-sm truncate w-24" id="displayNome">...</span></div>
             <div class="flex gap-2 items-center">
                 <div id="badgeGPS" class="bg-red-500 px-2 py-1 rounded text-[10px] font-bold shadow">SEM GPS</div>
                 <button onclick="app.sair()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow flex items-center gap-1"><i class="fas fa-sign-out-alt"></i> SAIR</button>
@@ -46,28 +41,32 @@
 
         <main class="flex-1 overflow-y-auto bg-gray-50 pb-24 p-4">
             <div id="abaPonto" class="flex flex-col items-center min-h-full">
+                
                 <div class="relative w-full max-w-xs aspect-[3/4] bg-gray-800 rounded-2xl overflow-hidden shadow-xl mb-4 border-4 border-white">
                     <video id="videoCam" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100" autoplay playsinline webkit-playsinline></video>
                     <img id="imgPreview" class="absolute inset-0 w-full h-full object-cover d-none">
-                    <div id="avisoCamera" class="d-none absolute inset-0 flex flex-col justify-center items-center text-white p-4 text-center">
-                        <i class="fas fa-video-slash text-4xl mb-2 opacity-50"></i>
-                        <p class="text-sm font-bold">Câmera Offline</p>
+                    
+                    <div id="avisoOffline" class="d-none absolute inset-0 flex flex-col justify-center items-center text-white p-4 text-center bg-black/80">
+                        <i class="fas fa-wifi text-4xl mb-2 text-red-500"></i>
+                        <p class="text-sm font-bold">Modo Offline</p>
+                        <p class="text-xs mt-1">Use a Câmera Nativa</p>
                     </div>
+
                     <div class="absolute bottom-2 inset-x-0 text-center pointer-events-none"><span class="bg-black/50 text-white text-[10px] px-2 py-1 rounded-full">Selfie Obrigatória</span></div>
                 </div>
 
                 <div class="flex gap-2 w-full max-w-xs mb-4">
-                    <button id="btnInverter" onclick="app.inverterCamera()" class="flex-1 bg-white border border-gray-300 text-gray-700 py-3 rounded-lg text-xs font-bold shadow-sm"><i class="fas fa-sync"></i> Inverter</button>
+                    <button onclick="app.inverterCamera()" class="flex-1 bg-white border border-gray-300 text-gray-700 py-3 rounded-lg text-xs font-bold shadow-sm"><i class="fas fa-sync"></i> Inverter</button>
                     <button onclick="document.getElementById('inputNativo').click()" class="flex-1 bg-blue-50 border border-blue-200 text-blue-700 py-3 rounded-lg text-xs font-bold shadow-sm hover:bg-blue-100"><i class="fas fa-camera text-lg"></i> Câmera Nativa</button>
                     <input type="file" id="inputNativo" accept="image/*" capture="user" class="d-none" onchange="app.processarArquivo(this)">
                 </div>
 
                 <button id="btnRegistrar" disabled onclick="app.salvar()" class="w-full max-w-xs bg-gray-400 text-white font-bold py-4 rounded-xl shadow-lg text-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed transition-all"><i class="fas fa-spinner fa-spin"></i> AGUARDE GPS...</button>
 
-                <div id="painelErro" class="d-none w-full max-w-xs mt-4 bg-red-50 border border-red-200 p-3 rounded-xl animate-pulse">
-                    <p class="text-xs text-red-700 font-bold mb-2">Sem conexão? Registre abaixo:</p>
+                <div id="painelErro" class="d-none w-full max-w-xs mt-4 bg-red-50 border border-red-200 p-3 rounded-xl animate-bounce">
+                    <p class="text-xs text-red-700 font-bold mb-2"><i class="fas fa-exclamation-triangle"></i> Sem conexão. Registre abaixo:</p>
                     <textarea id="txtErro" class="w-full p-2 text-sm border border-red-300 rounded mb-2" placeholder="Motivo (ex: sem internet)"></textarea>
-                    <button onclick="app.salvarErro()" class="w-full bg-red-600 text-white font-bold py-2 rounded shadow">SALVAR MANUALMENTE</button>
+                    <button onclick="app.salvarErro()" class="w-full bg-red-600 text-white font-bold py-2 rounded shadow">SALVAR LOCALMENTE</button>
                 </div>
             </div>
 
@@ -90,8 +89,8 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('App Offline Registrado!'))
-                    .catch(err => console.log('Erro SW:', err));
+                    .then(reg => console.log('✅ Service Worker Registrado! Escopo:', reg.scope))
+                    .catch(err => console.log('❌ Erro SW:', err));
             });
         }
     </script>
@@ -164,8 +163,17 @@
             iniciarCamera: async function() {
                 const video = document.getElementById('videoCam');
                 const img = document.getElementById('imgPreview');
-                const aviso = document.getElementById('avisoCamera');
+                const aviso = document.getElementById('avisoOffline');
+                
                 video.classList.remove('d-none'); img.classList.add('d-none'); aviso.classList.add('d-none');
+                
+                // Se estiver Offline, já avisa que o vídeo pode falhar e mostra o aviso
+                if(!navigator.onLine) {
+                     video.classList.add('d-none');
+                     aviso.classList.remove('d-none');
+                     return;
+                }
+
                 try {
                     if(window.streamRef) window.streamRef.getTracks().forEach(t => t.stop());
                     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: this.dados.modoCam } });
@@ -173,7 +181,8 @@
                     video.srcObject = stream;
                     video.style.transform = this.dados.modoCam === 'user' ? "scaleX(-1)" : "scaleX(1)";
                 } catch(e) { 
-                    video.classList.add('d-none'); aviso.classList.remove('d-none'); 
+                    video.classList.add('d-none'); 
+                    // Se falhar a câmera, força o uso do botão nativo
                 }
             },
 
@@ -210,7 +219,7 @@
                             preview.src = this.dados.foto;
                             preview.classList.remove('d-none');
                             document.getElementById('videoCam').classList.add('d-none');
-                            document.getElementById('avisoCamera').classList.add('d-none');
+                            document.getElementById('avisoOffline').classList.add('d-none');
                         }
                     };
                     reader.readAsDataURL(input.files[0]);
@@ -220,11 +229,11 @@
             salvar: async function() {
                 if(!this.dados.foto) this.dados.foto = this.capturarFoto();
                 if(!this.dados.foto) return alert("⚠️ FOTO OBRIGATÓRIA!");
-                
-                // VERIFICA SE ESTÁ OFFLINE ANTES DE ENVIAR
+
+                // CHECK OFFLINE
                 if(!navigator.onLine) {
-                    alert("⚠️ VOCÊ ESTÁ SEM INTERNET!\n\nO app não consegue enviar para a nuvem agora.\nPor favor, preencha o formulário de contingência abaixo para registrar localmente.");
                     document.getElementById('painelErro').classList.remove('d-none');
+                    alert("⚠️ SEM INTERNET!\nO sistema detectou que você está offline.\nPor favor, preencha o formulário abaixo para registrar na contingência.");
                     return;
                 }
 
@@ -240,7 +249,7 @@
                         localizacao: { lat: this.dados.lat, long: this.dados.long },
                         foto: this.dados.foto,
                         tipo: "ENTRADA",
-                        projeto: "GovFiscal V11"
+                        projeto: "GovFiscal V12"
                     });
                     alert("✅ SUCESSO!");
                     this.dados.foto = null; this.navegar('historico');
@@ -256,8 +265,7 @@
                 const obs = document.getElementById('txtErro').value;
                 if(!obs) return alert("Motivo obrigatório");
                 
-                // SALVAR EM CONTINGÊNCIA (MESMO SE O FIREBASE FALHAR TOTALMENTE)
-                // AQUI PODERÍAMOS USAR LOCALSTORAGE, MAS PARA O MVP VAMOS CONFIRMAR VISUALMENTE
+                // Tenta salvar no Firebase (pode falhar se sem net total, mas fica na fila do navegador)
                 try {
                      await addDoc(collection(db, "pontos"), {
                         nome: this.dados.nome,
@@ -266,18 +274,19 @@
                         tipo: "⚠️ CONTINGÊNCIA",
                         obs: obs
                     });
-                    alert("Salvo na nuvem (Contingência).");
+                    alert("Justificativa registrada.");
                 } catch(e) {
-                    alert("⚠️ ALERTA MÁXIMO: Sem conexão com o servidor.\nTire um print desta tela agora como prova!");
+                    alert("⚠️ Sem conexão com servidor.\nTire Print da tela.");
                 }
                 document.getElementById('painelErro').classList.add('d-none');
+                // Limpa campos visualmente
                 this.navegar('historico');
             },
 
             carregarHistorico: async function() {
-                if(!navigator.onLine) return document.getElementById('listaHistorico').innerHTML = '<p class="text-center text-red-500">Sem internet para buscar histórico.</p>';
-                
                 const lista = document.getElementById('listaHistorico');
+                if(!navigator.onLine) return lista.innerHTML = '<p class="text-center text-red-500 font-bold">Modo Offline: Histórico indisponível.</p>';
+                
                 lista.innerHTML = '<p class="text-center text-gray-400">Buscando...</p>';
                 try {
                     const q = query(collection(db, "pontos"), where("nome", "==", this.dados.nome));
