@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GovFiscal - App V8</title>
+    <title>GovFiscal - App Oficial</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Força bruta para esconder/mostrar elementos */
         .d-none { display: none !important; }
         .d-flex { display: flex !important; }
-        body { overflow: hidden; } /* Evita rolagem dupla */
+        body { overflow: hidden; } 
     </style>
 </head>
 <body class="bg-gray-100 font-sans h-screen w-screen flex flex-col">
@@ -19,14 +18,14 @@
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
             <i class="fas fa-landmark text-5xl text-blue-900 mb-4"></i>
             <h1 class="text-2xl font-bold text-gray-800">GovFiscal</h1>
-            <p class="text-gray-500 mb-6 text-sm">Acesso Restrito</p>
+            <p class="text-gray-500 mb-6 text-sm">Fiscalização Lei 14.133</p>
             
             <input type="text" id="inputNome" placeholder="SEU NOME COMPLETO" class="w-full p-3 border rounded-lg mb-4 text-center font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none">
             
             <button onclick="app.entrar()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg active:scale-95 transition-transform">
-                ENTRAR
+                ACESSAR SISTEMA
             </button>
-            <p class="mt-4 text-xs text-gray-400">Sistema V8.0 Online</p>
+            <p class="mt-4 text-xs text-gray-400">Sistema Online</p>
         </div>
     </div>
 
@@ -34,12 +33,16 @@
         
         <header class="bg-blue-900 p-4 text-white flex justify-between items-center shadow-md shrink-0">
             <div class="flex flex-col">
-                <span class="text-[10px] opacity-70 uppercase">Usuário</span>
-                <span class="font-bold text-sm truncate w-32" id="displayNome">...</span>
+                <span class="text-[10px] opacity-70 uppercase">Colaborador</span>
+                <span class="font-bold text-sm truncate w-24" id="displayNome">...</span>
             </div>
-            <div class="flex gap-3 items-center">
+            
+            <div class="flex gap-2 items-center">
                 <div id="badgeGPS" class="bg-red-500 px-2 py-1 rounded text-[10px] font-bold shadow">SEM GPS</div>
-                <button onclick="app.sair()" class="text-white hover:text-red-300"><i class="fas fa-sign-out-alt text-xl"></i></button>
+                
+                <button onclick="app.sair()" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-1.5 rounded shadow flex items-center gap-1 transition">
+                    <i class="fas fa-sign-out-alt"></i> SAIR
+                </button>
             </div>
         </header>
 
@@ -102,7 +105,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // Configuração Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAwUWRaGbXvjc1NwfnwzDJGCU5EdCK6mcI",
             authDomain: "govfiscal2.firebaseapp.com",
@@ -115,7 +117,6 @@
         const fApp = initializeApp(firebaseConfig);
         const db = getFirestore(fApp);
 
-        // OBJETO PRINCIPAL DO APP (Tudo dentro daqui para não dar conflito)
         window.app = {
             dados: { lat: 0, long: 0, nome: "", foto: null, modoCam: "user" },
             
@@ -126,24 +127,20 @@
                 this.dados.nome = nome.toUpperCase();
                 document.getElementById('displayNome').innerText = this.dados.nome;
 
-                // Troca de Tela Segura
                 const telaLogin = document.getElementById('telaLogin');
                 const telaApp = document.getElementById('telaApp');
                 
                 if(telaLogin && telaApp) {
                     telaLogin.classList.add('d-none');
                     telaApp.classList.remove('d-none');
-                    telaApp.classList.add('d-flex'); // Força display flex
-                    
+                    telaApp.classList.add('d-flex');
                     this.iniciarGPS();
                     this.iniciarCamera();
-                } else {
-                    alert("Erro Crítico: Telas não encontradas. Recarregue a página.");
                 }
             },
 
             sair: function() {
-                if(confirm("Sair do sistema?")) location.reload();
+                if(confirm("Deseja realmente sair?")) location.reload();
             },
 
             navegar: function(tela) {
@@ -176,13 +173,16 @@
                     const btn = document.getElementById('btnRegistrar');
                     const badge = document.getElementById('badgeGPS');
                     
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-fingerprint text-xl"></i> REGISTRAR PRESENÇA';
-                    btn.classList.remove('bg-gray-400', 'opacity-50', 'cursor-not-allowed');
-                    btn.classList.add('bg-green-600', 'hover:bg-green-700', 'active:scale-95');
-                    
-                    badge.innerText = "GPS OK";
-                    badge.classList.replace('bg-red-500', 'bg-green-500');
+                    if(btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="fas fa-fingerprint text-xl"></i> REGISTRAR PRESENÇA';
+                        btn.classList.remove('bg-gray-400', 'opacity-50', 'cursor-not-allowed');
+                        btn.classList.add('bg-green-600', 'hover:bg-green-700', 'active:scale-95');
+                    }
+                    if(badge) {
+                        badge.innerText = "GPS OK";
+                        badge.classList.replace('bg-red-500', 'bg-green-500');
+                    }
                 }, err => console.log("Erro GPS"), {enableHighAccuracy: true});
             },
 
@@ -201,10 +201,10 @@
                     window.streamRef = stream;
                     video.srcObject = stream;
                     
-                    // Espelhar se for selfie
+                    // Espelha se for selfie
                     video.style.transform = this.dados.modoCam === 'user' ? "scaleX(-1)" : "scaleX(1)";
 
-                } catch(e) { console.log("Erro Câmera"); }
+                } catch(e) { console.log("Erro Cam"); }
             },
 
             inverterCamera: function() {
@@ -220,7 +220,6 @@
                 canvas.width = 480; canvas.height = 640;
                 const ctx = canvas.getContext('2d');
                 
-                // Correção do espelhamento
                 if(this.dados.modoCam === 'user') {
                     ctx.translate(canvas.width, 0);
                     ctx.scale(-1, 1);
@@ -270,10 +269,10 @@
                         localizacao: { lat: this.dados.lat, long: this.dados.long },
                         foto: this.dados.foto,
                         tipo: "ENTRADA",
-                        projeto: "GovFiscal V8"
+                        projeto: "GovFiscal V9"
                     });
 
-                    alert("✅ REGISTRADO COM SUCESSO!");
+                    alert("✅ SUCESSO!");
                     this.dados.foto = null;
                     this.navegar('historico');
                     
@@ -286,7 +285,7 @@
                     btn.classList.replace('bg-green-600', 'bg-red-600');
                     btn.innerHTML = "ERRO";
                     document.getElementById('painelErro').classList.remove('d-none');
-                    alert("Erro de conexão. Preencha a justificativa abaixo.");
+                    alert("Erro de conexão.");
                 }
             },
 
@@ -320,7 +319,7 @@
                     docs.sort((a,b) => new Date(b.data) - new Date(a.data));
                     
                     lista.innerHTML = "";
-                    if(docs.length === 0) lista.innerHTML = '<p class="text-center">Sem registros.</p>';
+                    if(docs.length === 0) lista.innerHTML = '<p class="text-center text-gray-400">Sem registros.</p>';
                     
                     docs.forEach(d => {
                         const cor = d.tipo.includes("CONTINGÊNCIA") ? "red" : "green";
