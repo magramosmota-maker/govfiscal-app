@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GovFiscal - App Operacional</title>
+    <title>GovFiscal - Ponto Eletrônico</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>.hidden { display: none; }</style>
@@ -14,29 +14,33 @@
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
             <i class="fas fa-landmark text-5xl text-blue-900 mb-4"></i>
             <h1 class="text-2xl font-bold text-gray-800">GovFiscal</h1>
-            <p class="text-gray-500 mb-6 text-sm">Acesso Restrito - Lei 14.133</p>
+            <p class="text-gray-500 mb-6 text-sm">Fiscalização Lei 14.133</p>
             <input type="text" id="nomeOperario" placeholder="Seu Nome Completo" class="w-full p-3 border rounded-lg mb-4">
-            <button onclick="entrar()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition">ENTRAR NO SISTEMA</button>
+            <button onclick="entrar()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700">ENTRAR E ATIVAR GPS</button>
         </div>
     </div>
 
     <div id="appScreen" class="hidden min-h-screen flex flex-col">
         <div class="bg-blue-900 p-4 text-white flex justify-between items-center shadow-md">
             <div><p class="text-xs opacity-80">Logado como:</p><p class="font-bold" id="userDisplay">...</p></div>
-            <div class="bg-green-500 px-2 py-1 rounded text-xs font-bold">GPS ATIVO</div>
+            <div id="statusGPS" class="bg-red-500 px-2 py-1 rounded text-xs font-bold animate-pulse">BUSCANDO GPS...</div>
         </div>
 
         <div class="flex-1 p-6 flex flex-col items-center">
+            
             <div class="relative w-full max-w-sm bg-black rounded-2xl overflow-hidden shadow-lg mb-6 aspect-[3/4]">
                 <video id="video" class="absolute inset-0 w-full h-full object-cover" autoplay playsinline></video>
-                <canvas id="canvas" class="hidden"></canvas>
             </div>
             
-            <button id="btnBaterPonto" onclick="salvarNoFirebase()" class="w-full bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg text-xl flex items-center justify-center gap-2 hover:bg-green-700 transition active:scale-95">
-                <i class="fas fa-fingerprint"></i> REGISTRAR PRESENÇA
+            <button id="btnBaterPonto" disabled onclick="salvarNoFirebase()" class="w-full bg-gray-400 text-white font-bold py-4 rounded-xl shadow-lg text-xl flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
+                <i class="fas fa-satellite-dish"></i> AGUARDE O GPS...
             </button>
 
-            <div id="statusMsg" class="hidden mt-4 text-center p-3 rounded bg-yellow-100 text-yellow-800 w-full font-bold border border-yellow-200"></div>
+            <div id="statusMsg" class="hidden mt-4 text-center p-3 rounded font-bold w-full text-sm"></div>
+            
+            <p class="mt-4 text-xs text-gray-400 text-center px-4">
+                <i class="fas fa-info-circle"></i> O registro só é liberado após a confirmação via satélite da sua posição exata.
+            </p>
         </div>
     </div>
 
@@ -44,7 +48,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-        // SUA CONFIGURAÇÃO ESTÁ AQUI (Já inserida!)
         const firebaseConfig = {
             apiKey: "AIzaSyAwUWRaGbXvjc1NwfnwzDJGCU5EdCK6mcI",
             authDomain: "govfiscal2.firebaseapp.com",
@@ -54,99 +57,110 @@
             appId: "1:1025741103658:web:aceee319dea96270bd5953"
         };
 
-        // Inicializando o App
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         
-        // Tornando funções globais para o botão funcionar
         window.db = db;
         window.collection = collection;
         window.addDoc = addDoc;
     </script>
 
     <script>
-        // Lógica do App
         let lat = 0, long = 0;
         let nomeUser = "";
 
         function entrar() {
             nomeUser = document.getElementById('nomeOperario').value;
-            if(!nomeUser) return alert("Por favor, digite seu nome para entrar.");
+            if(!nomeUser) return alert("Por favor, digite seu nome.");
             
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('appScreen').classList.remove('hidden');
             document.getElementById('userDisplay').innerText = nomeUser;
             
             iniciarCamera();
-            
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
+            buscarGPS(); // Começa a caçar o satélite
+        }
+
+        function buscarGPS() {
+            if (!navigator.geolocation) {
+                return alert("Seu celular não tem GPS. Impossível validar.");
+            }
+
+            // Opções para ALTA PRECISÃO
+            const options = {
+                enableHighAccuracy: true, // Isso força o GPS real (não só wi-fi)
+                timeout: 10000,
+                maximumAge: 0
+            };
+
+            navigator.geolocation.watchPosition(
+                (pos) => {
                     lat = pos.coords.latitude;
                     long = pos.coords.longitude;
-                    console.log("GPS Capturado:", lat, long);
-                }, erro => {
-                    alert("Atenção: Ative o GPS para registrar o ponto!");
-                });
-            } else {
-                alert("Seu navegador não suporta GPS.");
-            }
+                    const precisao = pos.coords.accuracy;
+
+                    // Atualiza visual
+                    const tagGPS = document.getElementById('statusGPS');
+                    const btn = document.getElementById('btnBaterPonto');
+
+                    tagGPS.innerText = `GPS ATIVO (±${Math.round(precisao)}m)`;
+                    tagGPS.classList.remove('bg-red-500', 'animate-pulse');
+                    tagGPS.classList.add('bg-green-500');
+
+                    // Libera o botão
+                    btn.disabled = false;
+                    btn.classList.remove('bg-gray-400', 'opacity-50', 'cursor-not-allowed');
+                    btn.classList.add('bg-green-600', 'hover:bg-green-700');
+                    btn.innerHTML = '<i class="fas fa-fingerprint"></i> REGISTRAR PRESENÇA';
+                }, 
+                (erro) => {
+                    console.error(erro);
+                    alert("⚠️ ATENÇÃO: Você precisa clicar em 'Permitir' na localização para o app funcionar.");
+                },
+                options
+            );
         }
 
         async function iniciarCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                 document.getElementById('video').srcObject = stream;
-            } catch (e) { 
-                console.log("Erro camera", e);
-                alert("Precisamos da câmera para a prova de vida!"); 
-            }
+            } catch (e) { alert("Erro na câmera. Verifique as permissões."); }
         }
 
         async function salvarNoFirebase() {
             const btn = document.getElementById('btnBaterPonto');
             const msg = document.getElementById('statusMsg');
             
-            // Trava para não clicar duas vezes
-            if(btn.disabled) return;
-            
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SALVANDO NA NUVEM...';
-            btn.classList.replace('bg-green-600', 'bg-gray-600');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> VALIDANDO...';
             btn.disabled = true;
 
             try {
-                // Aqui a mágica acontece: Salvando no Banco de Dados Real
                 await window.addDoc(window.collection(window.db, "pontos"), {
                     nome: nomeUser,
-                    data: new Date().toISOString(), // Data universal
-                    data_legivel: new Date().toLocaleString('pt-BR'), // Data para leitura fácil
+                    data: new Date().toISOString(),
+                    data_legivel: new Date().toLocaleString('pt-BR'),
                     localizacao: { lat: lat, long: long },
                     tipo: "ENTRADA",
-                    projeto: "GovFiscal MVP"
+                    projeto: "GovFiscal 2.0"
                 });
 
-                msg.innerText = "✅ SUCESSO! Ponto registrado no GovFiscal2.";
-                msg.classList.remove('hidden', 'bg-yellow-100', 'text-yellow-800');
-                msg.classList.add('bg-green-100', 'text-green-800', 'border-green-200');
+                msg.innerText = "✅ SUCESSO! Registro com Prova de Localização.";
+                msg.classList.remove('hidden');
+                msg.classList.add('bg-green-100', 'text-green-800');
                 
-                btn.innerHTML = "REGISTRADO COM SUCESSO";
-                btn.classList.replace('bg-gray-600', 'bg-green-800');
+                btn.innerHTML = "REGISTRADO";
+                btn.classList.replace('bg-green-600', 'bg-green-800');
                 
-                // Reseta botão após 3 segundos
                 setTimeout(() => {
-                    btn.disabled = false;
+                    msg.classList.add('hidden');
                     btn.innerHTML = '<i class="fas fa-fingerprint"></i> REGISTRAR PRESENÇA';
                     btn.classList.replace('bg-green-800', 'bg-green-600');
-                    msg.classList.add('hidden');
+                    btn.disabled = false;
                 }, 3000);
                 
             } catch (erro) {
-                console.error(erro);
-                msg.innerText = "❌ Erro ao salvar: " + erro.message;
-                msg.classList.remove('hidden');
-                msg.classList.add('bg-red-100', 'text-red-800', 'border-red-200');
-                
-                btn.innerHTML = "TENTAR NOVAMENTE";
-                btn.classList.replace('bg-gray-600', 'bg-red-600');
+                alert("Erro ao salvar. Verifique sua conexão.");
                 btn.disabled = false;
             }
         }
