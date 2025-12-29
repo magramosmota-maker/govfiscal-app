@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GovFiscal - Ponto Eletrônico</title>
+    <title>GovFiscal - App Operacional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>.hidden { display: none; }</style>
@@ -22,25 +22,34 @@
 
     <div id="appScreen" class="hidden min-h-screen flex flex-col">
         <div class="bg-blue-900 p-4 text-white flex justify-between items-center shadow-md">
-            <div><p class="text-xs opacity-80">Logado como:</p><p class="font-bold" id="userDisplay">...</p></div>
+            <div><p class="text-xs opacity-80">Colaborador:</p><p class="font-bold" id="userDisplay">...</p></div>
             <div id="statusGPS" class="bg-red-500 px-2 py-1 rounded text-xs font-bold animate-pulse">BUSCANDO GPS...</div>
         </div>
 
         <div class="flex-1 p-6 flex flex-col items-center">
             
-            <div class="relative w-full max-w-sm bg-black rounded-2xl overflow-hidden shadow-lg mb-6 aspect-[3/4]">
+            <div class="relative w-full max-w-sm bg-black rounded-2xl overflow-hidden shadow-lg mb-4 aspect-[3/4] flex justify-center items-center">
                 <video id="video" class="absolute inset-0 w-full h-full object-cover" autoplay playsinline></video>
+                
+                <img id="fotoPreview" class="absolute inset-0 w-full h-full object-cover hidden">
+                
+                <div id="cameraFalha" class="hidden absolute z-10 text-center text-white p-4">
+                    <p class="mb-2">Câmera ao vivo indisponível.</p>
+                    <p class="text-xs opacity-70">Use o botão abaixo</p>
+                </div>
             </div>
+
+            <input type="file" id="inputCamera" accept="image/*" capture="environment" class="hidden" onchange="carregarFotoArquivo(this)">
+            
+            <button onclick="document.getElementById('inputCamera').click()" class="mb-4 text-blue-800 text-sm font-bold underline">
+                <i class="fas fa-camera"></i> Problemas? Use a Câmera Nativa
+            </button>
             
             <button id="btnBaterPonto" disabled onclick="salvarNoFirebase()" class="w-full bg-gray-400 text-white font-bold py-4 rounded-xl shadow-lg text-xl flex items-center justify-center gap-2 opacity-50 cursor-not-allowed">
                 <i class="fas fa-satellite-dish"></i> AGUARDE O GPS...
             </button>
 
             <div id="statusMsg" class="hidden mt-4 text-center p-3 rounded font-bold w-full text-sm"></div>
-            
-            <p class="mt-4 text-xs text-gray-400 text-center px-4">
-                <i class="fas fa-info-circle"></i> O registro só é liberado após a confirmação via satélite da sua posição exata.
-            </p>
         </div>
     </div>
 
@@ -68,6 +77,7 @@
     <script>
         let lat = 0, long = 0;
         let nomeUser = "";
+        let imagemBase64 = null; // Para guardar a foto
 
         function entrar() {
             nomeUser = document.getElementById('nomeOperario').value;
@@ -78,20 +88,12 @@
             document.getElementById('userDisplay').innerText = nomeUser;
             
             iniciarCamera();
-            buscarGPS(); // Começa a caçar o satélite
+            buscarGPS(); 
         }
 
+        // --- LÓGICA DO GPS ---
         function buscarGPS() {
-            if (!navigator.geolocation) {
-                return alert("Seu celular não tem GPS. Impossível validar.");
-            }
-
-            // Opções para ALTA PRECISÃO
-            const options = {
-                enableHighAccuracy: true, // Isso força o GPS real (não só wi-fi)
-                timeout: 10000,
-                maximumAge: 0
-            };
+            if (!navigator.geolocation) return alert("Seu celular não tem GPS.");
 
             navigator.geolocation.watchPosition(
                 (pos) => {
@@ -99,7 +101,6 @@
                     long = pos.coords.longitude;
                     const precisao = pos.coords.accuracy;
 
-                    // Atualiza visual
                     const tagGPS = document.getElementById('statusGPS');
                     const btn = document.getElementById('btnBaterPonto');
 
@@ -107,32 +108,82 @@
                     tagGPS.classList.remove('bg-red-500', 'animate-pulse');
                     tagGPS.classList.add('bg-green-500');
 
-                    // Libera o botão
+                    // Libera botão
                     btn.disabled = false;
                     btn.classList.remove('bg-gray-400', 'opacity-50', 'cursor-not-allowed');
                     btn.classList.add('bg-green-600', 'hover:bg-green-700');
                     btn.innerHTML = '<i class="fas fa-fingerprint"></i> REGISTRAR PRESENÇA';
                 }, 
-                (erro) => {
-                    console.error(erro);
-                    alert("⚠️ ATENÇÃO: Você precisa clicar em 'Permitir' na localização para o app funcionar.");
-                },
-                options
+                (erro) => { console.error("Erro GPS:", erro); },
+                { enableHighAccuracy: true, timeout: 20000 }
             );
         }
 
+        // --- LÓGICA DA CÂMERA (HÍBRIDA) ---
         async function iniciarCamera() {
+            const video = document.getElementById('video');
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-                document.getElementById('video').srcObject = stream;
-            } catch (e) { alert("Erro na câmera. Verifique as permissões."); }
+                // Tenta câmera traseira/ambiente primeiro, depois frontal
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "environment" } 
+                });
+                video.srcObject = stream;
+            } catch (e) {
+                console.log("Câmera ao vivo falhou, ativando modo manual.");
+                document.getElementById('cameraFalha').classList.remove('hidden');
+            }
         }
 
+        // Se usar o botão "Câmera Nativa"
+        function carregarFotoArquivo(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Mostra a foto carregada na tela
+                    const img = document.getElementById('fotoPreview');
+                    img.src = e.target.result;
+                    img.classList.remove('hidden');
+                    document.getElementById('video').classList.add('hidden'); // Esconde o vídeo
+                    imagemBase64 = e.target.result; // Salva para enviar
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Captura o frame do vídeo e transforma em imagem
+        function capturarFrameVideo() {
+            const video = document.getElementById('video');
+            if (!video.srcObject) return null; // Se não tiver vídeo rodando
+
+            const canvas = document.createElement('canvas');
+            canvas.width = 320; // Reduz tamanho para não travar
+            canvas.height = 420;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL('image/jpeg', 0.5); // Qualidade média
+        }
+
+        // --- SALVAR TUDO ---
         async function salvarNoFirebase() {
             const btn = document.getElementById('btnBaterPonto');
             const msg = document.getElementById('statusMsg');
             
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> VALIDANDO...';
+            // 1. Tenta pegar imagem (Do vídeo ou do Arquivo)
+            let fotoFinal = imagemBase64; 
+            
+            // Se não tem foto de arquivo, tenta tirar do vídeo agora
+            if (!fotoFinal) {
+                fotoFinal = capturarFrameVideo();
+            }
+
+            // Se mesmo assim não tiver foto (câmera quebrada e não subiu arquivo)
+            if (!fotoFinal) {
+                const confirmar = confirm("A câmera não capturou imagem. Deseja registrar sem foto (apenas GPS)?");
+                if(!confirmar) return;
+                fotoFinal = "Sem Foto";
+            }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ENVIANDO...';
             btn.disabled = true;
 
             try {
@@ -141,27 +192,34 @@
                     data: new Date().toISOString(),
                     data_legivel: new Date().toLocaleString('pt-BR'),
                     localizacao: { lat: lat, long: long },
+                    foto: fotoFinal, // AQUI VAI A FOTO (Base64)
                     tipo: "ENTRADA",
                     projeto: "GovFiscal 2.0"
                 });
 
-                msg.innerText = "✅ SUCESSO! Registro com Prova de Localização.";
+                msg.innerText = "✅ REGISTRO COM FOTO E GPS SALVO!";
                 msg.classList.remove('hidden');
                 msg.classList.add('bg-green-100', 'text-green-800');
                 
-                btn.innerHTML = "REGISTRADO";
+                btn.innerHTML = "SUCESSO!";
                 btn.classList.replace('bg-green-600', 'bg-green-800');
                 
                 setTimeout(() => {
                     msg.classList.add('hidden');
+                    btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-fingerprint"></i> REGISTRAR PRESENÇA';
                     btn.classList.replace('bg-green-800', 'bg-green-600');
-                    btn.disabled = false;
+                    // Limpa a foto para o próximo
+                    imagemBase64 = null;
+                    document.getElementById('fotoPreview').classList.add('hidden');
+                    document.getElementById('video').classList.remove('hidden');
                 }, 3000);
                 
             } catch (erro) {
-                alert("Erro ao salvar. Verifique sua conexão.");
+                console.error(erro);
+                alert("Erro ao salvar. Tente novamente.");
                 btn.disabled = false;
+                btn.innerHTML = "TENTAR NOVAMENTE";
             }
         }
     </script>
