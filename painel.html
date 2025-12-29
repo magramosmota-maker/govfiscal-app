@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GovFiscal - Painel Administrativo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 font-sans">
+
+    <div class="flex h-screen overflow-hidden">
+        <aside class="w-64 bg-blue-900 text-white hidden md:flex flex-col">
+            <div class="p-6 text-center border-b border-blue-800">
+                <i class="fas fa-landmark text-4xl mb-2"></i>
+                <h1 class="text-xl font-bold">GovFiscal Admin</h1>
+                <p class="text-xs text-blue-300">Gestão de Contratos</p>
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <a href="#" class="block p-3 bg-blue-800 rounded flex items-center gap-3">
+                    <i class="fas fa-chart-line"></i> Dashboard
+                </a>
+                <a href="#" class="block p-3 hover:bg-blue-800 rounded flex items-center gap-3 opacity-50">
+                    <i class="fas fa-users"></i> Funcionários
+                </a>
+                <a href="#" class="block p-3 hover:bg-blue-800 rounded flex items-center gap-3 opacity-50">
+                    <i class="fas fa-file-contract"></i> Relatórios
+                </a>
+            </nav>
+            <div class="p-4 border-t border-blue-800">
+                <p class="text-xs text-center opacity-50">Versão MVP 1.0</p>
+            </div>
+        </aside>
+
+        <main class="flex-1 flex flex-col overflow-y-auto">
+            <header class="bg-white shadow p-4 flex justify-between items-center">
+                <div class="md:hidden">GovFiscal</div> <h2 class="text-xl font-bold text-gray-800 hidden md:block">Monitoramento em Tempo Real</h2>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-sm font-bold text-gray-700">Secretaria Mun. Administração</p>
+                        <p class="text-xs text-green-600">● Sistema Online</p>
+                    </div>
+                </div>
+            </header>
+
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-blue-500">
+                        <p class="text-gray-500 text-sm">Registros Hoje</p>
+                        <h3 class="text-3xl font-bold text-gray-800" id="totalRegistros">0</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-green-500">
+                        <p class="text-gray-500 text-sm">Presentes Agora</p>
+                        <h3 class="text-3xl font-bold text-gray-800" id="presentesAgora">-</h3>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow border-l-4 border-red-500">
+                        <p class="text-gray-500 text-sm">Alertas de Ausência</p>
+                        <h3 class="text-3xl font-bold text-gray-800">0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="p-4 border-b flex justify-between items-center">
+                        <h3 class="font-bold text-gray-700"><i class="fas fa-list"></i> Últimos Registros</h3>
+                        <button onclick="carregarDados()" class="text-sm text-blue-600 hover:underline"><i class="fas fa-sync"></i> Atualizar</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 text-gray-600 text-sm uppercase">
+                                    <th class="p-4 border-b">Data/Hora</th>
+                                    <th class="p-4 border-b">Funcionário</th>
+                                    <th class="p-4 border-b">Tipo</th>
+                                    <th class="p-4 border-b">Localização (GPS)</th>
+                                    <th class="p-4 border-b">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabelaPontos" class="text-sm text-gray-700">
+                                <tr>
+                                    <td colspan="5" class="p-4 text-center text-gray-500">Carregando dados...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // SUAS CHAVES (GovFiscal2)
+        const firebaseConfig = {
+            apiKey: "AIzaSyAwUWRaGbXvjc1NwfnwzDJGCU5EdCK6mcI",
+            authDomain: "govfiscal2.firebaseapp.com",
+            projectId: "govfiscal2",
+            storageBucket: "govfiscal2.firebasestorage.app",
+            messagingSenderId: "1025741103658",
+            appId: "1:1025741103658:web:aceee319dea96270bd5953"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Função para monitorar dados em tempo real
+        function iniciarMonitoramento() {
+            const q = query(collection(db, "pontos"), orderBy("data", "desc"));
+            
+            // O comando onSnapshot ouve o banco 24h por dia. Se mudar lá, muda aqui.
+            onSnapshot(q, (snapshot) => {
+                const corpoTabela = document.getElementById("tabelaPontos");
+                corpoTabela.innerHTML = ""; // Limpa antes de preencher
+                
+                let contador = 0;
+
+                snapshot.forEach((doc) => {
+                    const dado = doc.data();
+                    contador++;
+                    
+                    // Criar Link do Google Maps
+                    const linkMapa = `https://www.google.com/maps?q=${dado.localizacao.lat},${dado.localizacao.long}`;
+                    
+                    const linha = `
+                        <tr class="hover:bg-gray-50 border-b">
+                            <td class="p-4 font-bold text-blue-900">${dado.data_legivel || "Sem data"}</td>
+                            <td class="p-4 font-medium">${dado.nome}</td>
+                            <td class="p-4"><span class="bg-green-100 text-green-800 py-1 px-2 rounded text-xs font-bold">${dado.tipo}</span></td>
+                            <td class="p-4">
+                                <a href="${linkMapa}" target="_blank" class="text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                                    <i class="fas fa-map-marker-alt"></i> Ver no Mapa
+                                </a>
+                            </td>
+                            <td class="p-4"><span class="text-green-600 font-bold text-xs">● Validado</span></td>
+                        </tr>
+                    `;
+                    corpoTabela.innerHTML += linha;
+                });
+
+                document.getElementById("totalRegistros").innerText = contador;
+                document.getElementById("presentesAgora").innerText = contador; // Simplificação para MVP
+                
+                if(contador === 0) {
+                    corpoTabela.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Nenhum registro encontrado ainda. Use o App para testar!</td></tr>';
+                }
+            });
+        }
+
+        // Iniciar assim que carregar
+        iniciarMonitoramento();
+    </script>
+</body>
+</html>
