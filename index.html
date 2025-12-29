@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GovFiscal - V14 Ajustado</title>
+    <title>GovFiscal - V17 AutoSync</title>
     
     <link rel="manifest" href="./manifest.json">
     <meta name="theme-color" content="#1e3a8a">
@@ -15,27 +15,47 @@
         .d-none { display: none !important; }
         .d-flex { display: flex !important; }
         body { overflow: hidden; } 
-        /* Animação para destacar o erro */
-        .shake { animation: shake 0.5s; border: 2px solid red; }
-        @keyframes shake {
-          0% { transform: translateX(0); }
-          25% { transform: translateX(-5px); }
-          50% { transform: translateX(5px); }
-          75% { transform: translateX(-5px); }
-          100% { transform: translateX(0); }
+        
+        /* Toast de Notificação */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 8px;
+            padding: 16px;
+            position: fixed;
+            z-index: 100;
+            left: 50%;
+            top: 30px;
+            transform: translateX(-50%);
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            opacity: 0;
+            transition: opacity 0.5s, top 0.5s;
         }
+        #toast.show {
+            visibility: visible;
+            opacity: 1;
+            top: 50px;
+        }
+        #toast.success { background-color: #166534; } /* Verde */
+        #toast.sync { background-color: #ca8a04; } /* Amarelo */
     </style>
 </head>
 <body class="bg-gray-100 font-sans h-screen w-screen flex flex-col">
+
+    <div id="toast"><i class="fas fa-info-circle"></i> <span>Notificação</span></div>
 
     <div id="telaLogin" class="fixed inset-0 bg-blue-900 z-50 flex flex-col justify-center items-center p-6">
         <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
             <i class="fas fa-landmark text-5xl text-blue-900 mb-4"></i>
             <h1 class="text-2xl font-bold text-gray-800">GovFiscal</h1>
-            <p class="text-gray-500 mb-6 text-sm">Acesso Restrito</p>
+            <p class="text-gray-500 mb-6 text-sm">Fiscalização Inteligente</p>
             <input type="text" id="inputNome" placeholder="SEU NOME" class="w-full p-3 border rounded-lg mb-4 text-center font-bold uppercase focus:ring-2 focus:ring-blue-500 outline-none">
             <button onclick="app.entrar()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 shadow-lg active:scale-95 transition-transform">ACESSAR</button>
-            <p class="mt-4 text-xs text-gray-400">V14.0 - UX Ajustada</p>
+            <p class="mt-4 text-xs text-gray-400">V17.0 - Envio Automático</p>
         </div>
     </div>
 
@@ -48,17 +68,15 @@
             </div>
         </header>
 
-        <main class="flex-1 overflow-y-auto bg-gray-50 pb-32 p-4"> <div id="abaPonto" class="flex flex-col items-center min-h-full">
+        <main class="flex-1 overflow-y-auto bg-gray-50 pb-32 p-4">
+            <div id="abaPonto" class="flex flex-col items-center min-h-full">
                 
                 <div class="relative w-full max-w-xs aspect-[3/4] bg-gray-800 rounded-2xl overflow-hidden shadow-xl mb-4 border-4 border-white">
                     <video id="videoCam" class="absolute inset-0 w-full h-full object-cover transform -scale-x-100" autoplay playsinline webkit-playsinline></video>
                     <img id="imgPreview" class="absolute inset-0 w-full h-full object-cover d-none">
-                    
                     <div id="avisoCamera" class="d-none absolute inset-0 flex flex-col justify-center items-center text-white p-4 text-center">
-                        <i class="fas fa-video-slash text-4xl mb-2 opacity-50"></i>
-                        <p class="text-sm font-bold">Câmera Indisponível</p>
+                        <i class="fas fa-video-slash text-4xl mb-2 opacity-50"></i><p class="text-sm font-bold">Câmera Indisponível</p>
                     </div>
-
                     <div class="absolute bottom-2 inset-x-0 text-center pointer-events-none"><span class="bg-black/50 text-white text-[10px] px-2 py-1 rounded-full">Selfie Obrigatória</span></div>
                 </div>
 
@@ -70,17 +88,11 @@
 
                 <button id="btnRegistrar" disabled onclick="app.salvar()" class="w-full max-w-xs bg-gray-400 text-white font-bold py-4 rounded-xl shadow-lg text-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed transition-all"><i class="fas fa-spinner fa-spin"></i> AGUARDE GPS...</button>
 
-                <div id="painelErro" class="d-none w-full max-w-xs mt-6 bg-red-100 border-2 border-red-500 p-4 rounded-xl shadow-2xl">
-                    <h3 class="text-red-800 font-black text-lg mb-2 flex items-center gap-2">
-                        <i class="fas fa-wifi"></i> MODO OFFLINE
-                    </h3>
-                    <p class="text-sm text-red-700 mb-3 font-semibold">Sem internet. Preencha abaixo para salvar no celular:</p>
-                    
-                    <textarea id="txtErro" class="w-full p-3 text-base border-2 border-red-300 rounded-lg mb-4 focus:border-red-600 focus:ring-2 focus:ring-red-200" rows="3" placeholder="Digite aqui o motivo..."></textarea>
-                    
-                    <button onclick="app.salvarErro()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-lg shadow-lg text-lg transition-transform active:scale-95">
-                        SALVAR AGORA
-                    </button>
+                <div id="painelErro" class="d-none w-full max-w-xs mt-6 bg-yellow-50 border-2 border-yellow-500 p-4 rounded-xl shadow-2xl">
+                    <h3 class="text-yellow-800 font-black text-lg mb-2 flex items-center gap-2"><i class="fas fa-wifi"></i> SEM INTERNET</h3>
+                    <p class="text-sm text-yellow-700 mb-3 font-semibold">Preencha abaixo para salvar no celular (envio automático depois):</p>
+                    <textarea id="txtErro" class="w-full p-3 text-base border-2 border-yellow-300 rounded-lg mb-4" rows="3" placeholder="Motivo (ex: sem sinal)"></textarea>
+                    <button onclick="app.salvarLocalmente()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 rounded-lg shadow-lg text-lg">SALVAR NO CELULAR</button>
                 </div>
             </div>
 
@@ -99,13 +111,7 @@
         </nav>
     </div>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                for(let registration of registrations) { registration.unregister(); } 
-            });
-        }
-    </script>
+    <script>if ('serviceWorker' in navigator) { navigator.serviceWorker.getRegistrations().then(r => r.forEach(reg => reg.unregister())); }</script>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -123,6 +129,15 @@
         const fApp = initializeApp(firebaseConfig);
         const db = getFirestore(fApp);
 
+        // --- SISTEMA DE TOAST (NOTIFICAÇÃO) ---
+        function showToast(msg, type = 'info') {
+            const t = document.getElementById('toast');
+            t.className = type; // success or sync
+            t.innerHTML = msg;
+            t.classList.add('show');
+            setTimeout(() => { t.classList.remove('show'); }, 4000);
+        }
+
         window.app = {
             dados: { lat: 0, long: 0, nome: "", foto: null, modoCam: "user" },
             
@@ -136,10 +151,11 @@
                 document.getElementById('telaApp').classList.add('d-flex');
                 this.iniciarGPS();
                 this.iniciarCamera();
+                
+                // Tenta sincronizar ao entrar se tiver internet
+                if(navigator.onLine) this.autoSync();
             },
-
             sair: function() { if(confirm("Deseja sair?")) location.reload(); },
-
             navegar: function(tela) {
                 if(tela === 'ponto') {
                     document.getElementById('abaPonto').classList.remove('d-none');
@@ -155,7 +171,6 @@
                     this.carregarHistorico();
                 }
             },
-
             iniciarGPS: function() {
                 if(!navigator.geolocation) return alert("Sem GPS");
                 navigator.geolocation.watchPosition(pos => {
@@ -171,36 +186,23 @@
                     badge.classList.replace('bg-red-500', 'bg-green-500');
                 }, err => console.log("Erro GPS"), {enableHighAccuracy: true});
             },
-
             iniciarCamera: async function() {
                 const video = document.getElementById('videoCam');
-                const img = document.getElementById('imgPreview');
                 const aviso = document.getElementById('avisoCamera');
-                
-                video.classList.remove('d-none'); img.classList.add('d-none'); aviso.classList.add('d-none');
-                
-                if(!navigator.onLine) {
-                     video.classList.add('d-none');
-                     // Não forçamos aviso aqui para não poluir, apenas no envio
-                }
-
+                video.classList.remove('d-none'); aviso.classList.add('d-none');
+                if(!navigator.onLine) { video.classList.add('d-none'); } 
                 try {
                     if(window.streamRef) window.streamRef.getTracks().forEach(t => t.stop());
                     const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: this.dados.modoCam } });
                     window.streamRef = stream;
                     video.srcObject = stream;
                     video.style.transform = this.dados.modoCam === 'user' ? "scaleX(-1)" : "scaleX(1)";
-                } catch(e) { 
-                    video.classList.add('d-none');
-                    aviso.classList.remove('d-none');
-                }
+                } catch(e) { video.classList.add('d-none'); aviso.classList.remove('d-none'); }
             },
-
             inverterCamera: function() {
                 this.dados.modoCam = this.dados.modoCam === 'user' ? 'environment' : 'user';
                 this.iniciarCamera();
             },
-
             capturarFoto: function() {
                 const video = document.getElementById('videoCam');
                 if(video.classList.contains('d-none')) return null;
@@ -211,7 +213,6 @@
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
                 return canvas.toDataURL('image/jpeg', 0.6);
             },
-
             processarArquivo: function(input) {
                 if(input.files[0]) {
                     const reader = new FileReader();
@@ -228,110 +229,3 @@
                             const preview = document.getElementById('imgPreview');
                             preview.src = this.dados.foto;
                             preview.classList.remove('d-none');
-                            document.getElementById('videoCam').classList.add('d-none');
-                            document.getElementById('avisoCamera').classList.add('d-none');
-                        }
-                    };
-                    reader.readAsDataURL(input.files[0]);
-                }
-            },
-
-            salvar: async function() {
-                if(!this.dados.foto) this.dados.foto = this.capturarFoto();
-                if(!this.dados.foto) return alert("⚠️ FOTO OBRIGATÓRIA!");
-
-                // MODO OFFLINE DETECTADO
-                if(!navigator.onLine) {
-                    const painel = document.getElementById('painelErro');
-                    
-                    // 1. Mostra o painel
-                    painel.classList.remove('d-none');
-                    painel.classList.add('shake'); // Efeito visual de alerta
-                    
-                    // 2. Avisa
-                    alert("⚠️ VOCÊ ESTÁ OFFLINE!\n\nRole para baixo e preencha a justificativa no quadro vermelho para salvar.");
-                    
-                    // 3. ROLA A TELA ATÉ O PAINEL AUTOMATICAMENTE
-                    setTimeout(() => {
-                        painel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        document.getElementById('txtErro').focus();
-                    }, 500);
-                    
-                    return;
-                }
-
-                const btn = document.getElementById('btnRegistrar');
-                const btnOriginal = btn.innerHTML;
-                btn.innerHTML = "ENVIANDO..."; btn.disabled = true;
-
-                try {
-                    await addDoc(collection(db, "pontos"), {
-                        nome: this.dados.nome,
-                        data: new Date().toISOString(),
-                        data_legivel: new Date().toLocaleString('pt-BR'),
-                        localizacao: { lat: this.dados.lat, long: this.dados.long },
-                        foto: this.dados.foto,
-                        tipo: "ENTRADA",
-                        projeto: "GovFiscal V14"
-                    });
-                    alert("✅ SUCESSO!");
-                    this.dados.foto = null; this.navegar('historico');
-                    btn.innerHTML = btnOriginal; btn.disabled = false; this.iniciarCamera();
-                } catch(e) {
-                    btn.classList.replace('bg-green-600', 'bg-red-600'); btn.innerHTML = "ERRO";
-                    
-                    // Se der erro de envio (mesmo com net), também mostra e rola
-                    const painel = document.getElementById('painelErro');
-                    painel.classList.remove('d-none');
-                    setTimeout(() => {
-                        painel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 500);
-                    
-                    alert("Erro de conexão. Use o painel de contingência abaixo.");
-                }
-            },
-
-            salvarErro: async function() {
-                const obs = document.getElementById('txtErro').value;
-                if(!obs) return alert("Motivo obrigatório");
-                
-                try {
-                     await addDoc(collection(db, "pontos"), {
-                        nome: this.dados.nome,
-                        data: new Date().toISOString(),
-                        localizacao: { lat: this.dados.lat, long: this.dados.long },
-                        tipo: "⚠️ CONTINGÊNCIA",
-                        obs: obs
-                    });
-                    alert("Justificativa registrada.");
-                } catch(e) {
-                    alert("⚠️ ALERTA: Sem conexão nenhuma.\nTire um print desta tela como prova!");
-                }
-                document.getElementById('painelErro').classList.add('d-none');
-                this.navegar('historico');
-            },
-
-            carregarHistorico: async function() {
-                const lista = document.getElementById('listaHistorico');
-                if(!navigator.onLine) return lista.innerHTML = '<p class="text-center text-red-500">Sem internet.</p>';
-                
-                lista.innerHTML = '<p class="text-center text-gray-400">Buscando...</p>';
-                try {
-                    const q = query(collection(db, "pontos"), where("nome", "==", this.dados.nome));
-                    const snap = await getDocs(q);
-                    let docs = [];
-                    snap.forEach(d => docs.push(d.data()));
-                    docs.sort((a,b) => new Date(b.data) - new Date(a.data));
-                    lista.innerHTML = "";
-                    if(docs.length === 0) lista.innerHTML = '<p class="text-center text-gray-400">Sem registros.</p>';
-                    docs.forEach(d => {
-                        const cor = d.tipo.includes("CONTINGÊNCIA") ? "red" : "green";
-                        const html = `<div class="bg-white p-3 rounded shadow border-l-4 border-${cor}-500 flex justify-between"><div><div class="font-bold">${d.data_legivel ? d.data_legivel.split(',')[1] : "Hoje"}</div><div class="text-xs text-gray-500">${d.data_legivel ? d.data_legivel.split(',')[0] : ""}</div></div><span class="text-${cor}-600 font-bold text-xs bg-${cor}-50 px-2 py-1 rounded h-fit">${d.tipo}</span></div>`;
-                        lista.innerHTML += html;
-                    });
-                } catch(e) { lista.innerHTML = "Erro ao buscar."; }
-            }
-        };
-    </script>
-</body>
-</html>
