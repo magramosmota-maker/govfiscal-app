@@ -3,88 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GovFiscal - App do Colaborador</title>
+    <title>GovFiscal - App Operacional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>.hidden { display: none; }</style>
+    <style>
+        .hidden { display: none; }
+        /* Animação suave */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
 </head>
 <body class="bg-gray-100 font-sans h-screen flex flex-col">
 
-    <div id="loginScreen" class="flex-1 flex flex-col justify-center items-center p-6 bg-blue-900 z-50 absolute w-full h-full top-0">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center">
+    <div id="loginScreen" class="fixed inset-0 bg-blue-900 z-50 flex flex-col justify-center items-center p-6">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-sm text-center fade-in">
             <i class="fas fa-landmark text-5xl text-blue-900 mb-4"></i>
             <h1 class="text-2xl font-bold text-gray-800">GovFiscal</h1>
-            <p class="text-gray-500 mb-6 text-sm">Acesso do Colaborador</p>
-            <input type="text" id="nomeOperario" placeholder="Digite seu Nome Completo" class="w-full p-3 border rounded-lg mb-4 uppercase">
-            <button onclick="entrar()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700">ACESSAR SISTEMA</button>
+            <p class="text-gray-500 mb-6 text-sm">Acesso Restrito - Lei 14.133</p>
+            
+            <input type="text" id="nomeOperario" placeholder="Digite seu Nome" class="w-full p-3 border rounded-lg mb-4 uppercase focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <button onclick="window.entrar()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-lg">
+                ACESSAR SISTEMA
+            </button>
+            
+            <p class="mt-4 text-xs text-gray-400">Status: <span id="statusConexao" class="text-green-500">Online</span></p>
         </div>
     </div>
 
-    <header id="appHeader" class="hidden bg-blue-900 p-4 text-white flex justify-between items-center shadow-md">
+    <header id="appHeader" class="hidden bg-blue-900 p-4 text-white flex justify-between items-center shadow-md sticky top-0 z-40">
         <div>
-            <p class="text-xs opacity-80">Olá,</p>
+            <p class="text-xs opacity-80">Logado como:</p>
             <p class="font-bold truncate w-32" id="userDisplay">...</p>
         </div>
         <div class="flex items-center gap-2">
             <div id="statusGPS" class="bg-red-500 px-2 py-1 rounded text-xs font-bold animate-pulse">GPS OFF</div>
-            <button onclick="sair()" class="bg-blue-800 p-2 rounded text-xs hover:bg-red-600 transition"><i class="fas fa-sign-out-alt"></i> Sair</button>
+            <button onclick="window.sair()" class="bg-blue-800 p-2 rounded text-xs hover:bg-red-600 transition"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
 
-    <main id="appContent" class="hidden flex-1 overflow-y-auto pb-20">
+    <main id="appContent" class="hidden flex-1 overflow-y-auto pb-24 bg-gray-50">
         
-        <div id="tabRegistrar" class="p-6 flex flex-col items-center">
+        <div id="tabRegistrar" class="p-6 flex flex-col items-center fade-in">
             
-            <div class="relative w-full max-w-sm bg-black rounded-2xl overflow-hidden shadow-lg mb-4 aspect-[3/4] flex justify-center items-center group">
+            <div class="relative w-full max-w-sm bg-black rounded-2xl overflow-hidden shadow-lg mb-4 aspect-[3/4] flex justify-center items-center ring-4 ring-gray-200">
                 <video id="video" class="absolute inset-0 w-full h-full object-cover" autoplay playsinline></video>
                 <img id="fotoPreview" class="absolute inset-0 w-full h-full object-cover hidden">
-                <div class="absolute bottom-4 text-white text-xs bg-black/50 px-2 py-1 rounded">Prova de Vida Obrigatória</div>
+                <div class="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
+                    <span class="text-white text-xs bg-black/60 px-3 py-1 rounded-full">Foto Obrigatória</span>
+                </div>
             </div>
 
-            <input type="file" id="inputCamera" accept="image/*" capture="environment" class="hidden" onchange="carregarFotoArquivo(this)">
-            <button onclick="document.getElementById('inputCamera').click()" class="mb-6 text-blue-700 text-sm font-bold bg-blue-100 px-4 py-2 rounded-full border border-blue-200">
+            <input type="file" id="inputCamera" accept="image/*" capture="environment" class="hidden" onchange="window.carregarFotoArquivo(this)">
+            <button onclick="document.getElementById('inputCamera').click()" class="mb-6 bg-white text-blue-700 text-sm font-bold px-6 py-2 rounded-full border border-blue-200 shadow hover:bg-blue-50">
                 <i class="fas fa-camera"></i> Usar Câmera do Celular
             </button>
 
-            <button id="btnBaterPonto" disabled onclick="salvarPonto()" class="w-full bg-gray-400 text-white font-bold py-4 rounded-xl shadow-lg text-xl flex items-center justify-center gap-2 opacity-50 cursor-not-allowed transition-all">
+            <button id="btnBaterPonto" disabled onclick="window.salvarPonto()" class="w-full bg-gray-400 text-white font-bold py-4 rounded-xl shadow-lg text-xl flex items-center justify-center gap-2 opacity-50 cursor-not-allowed transition-all active:scale-95">
                 <i class="fas fa-satellite-dish"></i> AGUARDE O GPS...
             </button>
 
             <div id="boxContingencia" class="hidden w-full mt-6 bg-red-50 border border-red-200 p-4 rounded-lg">
-                <h3 class="text-red-800 font-bold mb-2"><i class="fas fa-exclamation-triangle"></i> Falha no Envio Automático</h3>
-                <p class="text-xs text-red-700 mb-3">Ocorreu um erro técnico. Para não ser prejudicado, preencha a justificativa abaixo e anexe um print da tela se possível.</p>
-                
-                <textarea id="motivoErro" class="w-full p-2 text-sm border rounded mb-3" placeholder="Descreva o que aconteceu..."></textarea>
-                <button onclick="salvarContingencia()" class="w-full bg-red-600 text-white font-bold py-2 rounded hover:bg-red-700">
-                    REGISTRAR EM CONTINGÊNCIA
-                </button>
+                <h3 class="text-red-800 font-bold mb-2 flex items-center gap-2"><i class="fas fa-exclamation-triangle"></i> Erro de Envio</h3>
+                <p class="text-xs text-red-700 mb-3">Preencha abaixo para registrar manualmente.</p>
+                <textarea id="motivoErro" class="w-full p-2 text-sm border border-red-300 rounded mb-3" placeholder="O que aconteceu?"></textarea>
+                <button onclick="window.salvarContingencia()" class="w-full bg-red-600 text-white font-bold py-2 rounded shadow">GRAVAR LOCALMENTE</button>
             </div>
         </div>
 
-        <div id="tabHistorico" class="hidden p-4">
-            <h2 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">Meu Histórico</h2>
-            <div id="listaHistorico" class="space-y-3">
-                <p class="text-center text-gray-400 mt-10">Carregando...</p>
-            </div>
+        <div id="tabHistorico" class="hidden p-4 fade-in">
+            <h2 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2 flex justify-between">
+                Meus Registros
+                <button onclick="window.carregarHistorico()" class="text-xs bg-gray-200 px-2 rounded text-gray-600"><i class="fas fa-sync"></i></button>
+            </h2>
+            <div id="listaHistorico" class="space-y-3"></div>
         </div>
 
     </main>
 
-    <nav id="appMenu" class="hidden bg-white border-t flex justify-around p-3 fixed bottom-0 w-full shadow-lg text-gray-500">
-        <button onclick="mudarAba('registrar')" id="navReg" class="text-blue-600 flex flex-col items-center">
-            <i class="fas fa-fingerprint text-xl mb-1"></i>
-            <span class="text-xs">Registrar</span>
+    <nav id="appMenu" class="hidden bg-white border-t flex justify-around p-3 fixed bottom-0 w-full shadow text-gray-400 z-50">
+        <button onclick="window.mudarAba('registrar')" id="navReg" class="text-blue-600 flex flex-col items-center w-1/2 border-r">
+            <i class="fas fa-fingerprint text-xl mb-1"></i><span class="text-xs">Ponto</span>
         </button>
-        <button onclick="mudarAba('historico')" id="navHist" class="hover:text-blue-600 flex flex-col items-center">
-            <i class="fas fa-list text-xl mb-1"></i>
-            <span class="text-xs">Meus Registros</span>
+        <button onclick="window.mudarAba('historico')" id="navHist" class="hover:text-blue-600 flex flex-col items-center w-1/2">
+            <i class="fas fa-list text-xl mb-1"></i><span class="text-xs">Histórico</span>
         </button>
     </nav>
 
     <script type="module">
+        // 1. IMPORTAÇÕES
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // 2. CONFIGURAÇÃO
         const firebaseConfig = {
             apiKey: "AIzaSyAwUWRaGbXvjc1NwfnwzDJGCU5EdCK6mcI",
             authDomain: "govfiscal2.firebaseapp.com",
@@ -96,31 +107,21 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        
-        // Exportando para usar no HTML
-        window.db = db;
-        window.collection = collection;
-        window.addDoc = addDoc;
-        window.query = query;
-        window.where = where;
-        window.getDocs = getDocs;
-        window.orderBy = orderBy;
-    </script>
 
-    <script>
-        // ESTADO DO APP
+        // 3. VARIÁVEIS GLOBAIS
         let lat = 0, long = 0;
         let nomeUser = "";
         let imagemBase64 = null;
 
-        // --- FUNÇÕES DE NAVEGAÇÃO ---
-        function entrar() {
-            const inputNome = document.getElementById('nomeOperario');
-            if(!inputNome.value || inputNome.value.length < 3) return alert("Digite seu nome completo.");
+        // 4. FUNÇÕES EXPOSTAS (O Segredo para corrigir o erro 'entrar is not defined')
+        
+        window.entrar = function() {
+            const input = document.getElementById('nomeOperario');
+            if(!input.value || input.value.length < 3) return alert("Digite seu nome completo.");
             
-            nomeUser = inputNome.value.toUpperCase();
-            localStorage.setItem("govfiscal_user", nomeUser); // Lembrar usuário
-
+            nomeUser = input.value.toUpperCase();
+            
+            // Troca Tela
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('appHeader').classList.remove('hidden');
             document.getElementById('appContent').classList.remove('hidden');
@@ -131,51 +132,46 @@
             buscarGPS();
         }
 
-        function sair() {
-            if(confirm("Deseja realmente sair?")) {
-                window.location.reload();
-            }
+        window.sair = function() {
+            if(confirm("Sair do sistema?")) window.location.reload();
         }
 
-        function mudarAba(aba) {
-            // Reseta cores
-            document.getElementById('navReg').classList.remove('text-blue-600');
-            document.getElementById('navHist').classList.remove('text-blue-600');
-            
-            // Esconde tudo
+        window.mudarAba = function(aba) {
             document.getElementById('tabRegistrar').classList.add('hidden');
             document.getElementById('tabHistorico').classList.add('hidden');
+            document.getElementById('navReg').classList.remove('text-blue-600');
+            document.getElementById('navHist').classList.remove('text-blue-600');
 
             if(aba === 'registrar') {
                 document.getElementById('tabRegistrar').classList.remove('hidden');
                 document.getElementById('navReg').classList.add('text-blue-600');
-                iniciarCamera(); // Reativa câmera se voltar
+                if(!imagemBase64) iniciarCamera();
             } else {
                 document.getElementById('tabHistorico').classList.remove('hidden');
                 document.getElementById('navHist').classList.add('text-blue-600');
-                carregarHistorico();
+                window.carregarHistorico();
             }
         }
 
-        // --- HARDWARE (GPS E CÂMERA) ---
+        // --- HARDWARE ---
         function buscarGPS() {
-            if (!navigator.geolocation) return alert("Erro crítico: Aparelho sem GPS.");
+            if (!navigator.geolocation) return alert("Erro: Sem GPS.");
             navigator.geolocation.watchPosition(
                 (pos) => {
                     lat = pos.coords.latitude;
                     long = pos.coords.longitude;
-                    const el = document.getElementById('statusGPS');
-                    el.innerText = `GPS ON (±${Math.round(pos.coords.accuracy)}m)`;
-                    el.classList.replace('bg-red-500', 'bg-green-500');
-                    el.classList.remove('animate-pulse');
+                    const acc = Math.round(pos.coords.accuracy);
+                    
+                    const gpsDiv = document.getElementById('statusGPS');
+                    gpsDiv.innerText = `GPS ON (±${acc}m)`;
+                    gpsDiv.className = "bg-green-500 px-2 py-1 rounded text-xs font-bold";
                     
                     const btn = document.getElementById('btnBaterPonto');
                     btn.disabled = false;
-                    btn.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-gray-400');
-                    btn.classList.add('bg-green-600', 'hover:bg-green-700');
-                    btn.innerHTML = '<i class="fas fa-fingerprint"></i> CONFIRMAR PRESENÇA';
+                    btn.innerHTML = '<i class="fas fa-fingerprint"></i> REGISTRAR PRESENÇA';
+                    btn.className = "w-full bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg text-xl flex items-center justify-center gap-2 hover:bg-green-700 transition-all active:scale-95";
                 },
-                (err) => console.log(err),
+                (err) => console.error("Erro GPS", err),
                 { enableHighAccuracy: true }
             );
         }
@@ -183,34 +179,18 @@
         async function iniciarCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                document.getElementById('video').srcObject = stream;
-                document.getElementById('video').classList.remove('hidden');
+                const video = document.getElementById('video');
+                video.srcObject = stream;
+                video.classList.remove('hidden');
                 document.getElementById('fotoPreview').classList.add('hidden');
-            } catch (e) { console.log("Erro câmera stream"); }
+            } catch (e) { console.log("Erro Cam"); }
         }
 
-        // --- COMPRESSOR DE IMAGEM ---
-        function carregarFotoArquivo(input) {
+        window.carregarFotoArquivo = function(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const img = new Image();
-                    img.src = e.target.result;
-                    img.onload = function() {
-                        const canvas = document.createElement('canvas');
-                        const ctx = canvas.getContext('2d');
-                        const MAX_WIDTH = 600; 
-                        const scaleSize = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleSize;
-                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        const fotoLeve = canvas.toDataURL('image/jpeg', 0.6);
-                        
-                        document.getElementById('fotoPreview').src = fotoLeve;
-                        document.getElementById('fotoPreview').classList.remove('hidden');
-                        document.getElementById('video').classList.add('hidden');
-                        imagemBase64 = fotoLeve;
-                    }
+                    processarImagem(e.target.result);
                 }
                 reader.readAsDataURL(input.files[0]);
             }
@@ -218,8 +198,111 @@
 
         function capturarFrame() {
             const video = document.getElementById('video');
-            if (!video.srcObject || video.classList.contains('hidden')) return imagemBase64;
-            
+            if (!video.srcObject || video.classList.contains('hidden')) return null;
             const canvas = document.createElement('canvas');
-            canvas.width = 400; canvas.height = 530;
-            canvas.getContext('2d').drawImage(video, 0
+            canvas.width = 480; canvas.height = 640;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            return canvas.toDataURL('image/jpeg', 0.7);
+        }
+
+        function processarImagem(base64) {
+            const img = new Image();
+            img.src = base64;
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const maxW = 800;
+                const scale = maxW / img.width;
+                canvas.width = maxW;
+                canvas.height = img.height * scale;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                const final = canvas.toDataURL('image/jpeg', 0.6);
+                imagemBase64 = final;
+                
+                document.getElementById('fotoPreview').src = final;
+                document.getElementById('fotoPreview').classList.remove('hidden');
+                document.getElementById('video').classList.add('hidden');
+            }
+        }
+
+        // --- SALVAR ---
+        window.salvarPonto = async function() {
+            if(!imagemBase64) imagemBase64 = capturarFrame();
+            
+            if(!imagemBase64 || imagemBase64.length < 100) {
+                return alert("⚠️ FOTO OBRIGATÓRIA! Use a câmera.");
+            }
+
+            const btn = document.getElementById('btnBaterPonto');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ENVIANDO...';
+            btn.disabled = true;
+
+            try {
+                await addDoc(collection(db, "pontos"), {
+                    nome: nomeUser,
+                    data: new Date().toISOString(),
+                    data_legivel: new Date().toLocaleString('pt-BR'),
+                    localizacao: { lat: lat, long: long },
+                    foto: imagemBase64,
+                    tipo: "ENTRADA",
+                    projeto: "GovFiscal V3.2"
+                });
+
+                alert("✅ SUCESSO! Registro confirmado.");
+                imagemBase64 = null;
+                window.mudarAba('historico');
+                
+                btn.innerHTML = '<i class="fas fa-fingerprint"></i> REGISTRAR PRESENÇA';
+                btn.disabled = false;
+                iniciarCamera();
+
+            } catch (erro) {
+                console.error(erro);
+                btn.innerHTML = "ERRO";
+                btn.classList.replace('bg-green-600', 'bg-red-600');
+                document.getElementById('boxContingencia').classList.remove('hidden');
+                alert("❌ Erro de conexão. Use o formulário abaixo.");
+            }
+        }
+
+        window.salvarContingencia = async function() {
+            const obs = document.getElementById('motivoErro').value;
+            if(!obs) return alert("Digite o motivo.");
+            
+            try {
+                await addDoc(collection(db, "pontos"), {
+                    nome: nomeUser,
+                    data: new Date().toISOString(),
+                    localizacao: { lat: lat, long: long },
+                    tipo: "⚠️ CONTINGÊNCIA",
+                    obs: obs
+                });
+                alert("⚠️ Salvo em contingência.");
+                document.getElementById('boxContingencia').classList.add('hidden');
+                window.mudarAba('historico');
+            } catch(e) { alert("Erro fatal."); }
+        }
+
+        window.carregarHistorico = async function() {
+            const lista = document.getElementById('listaHistorico');
+            lista.innerHTML = '<p class="text-center text-gray-400">Carregando...</p>';
+            
+            try {
+                const q = query(collection(db, "pontos"), where("nome", "==", nomeUser));
+                const snap = await getDocs(q);
+                
+                let docs = [];
+                snap.forEach(d => docs.push(d.data()));
+                docs.sort((a,b) => new Date(b.data) - new Date(a.data));
+
+                lista.innerHTML = "";
+                if(docs.length === 0) lista.innerHTML = '<p class="text-center">Sem registros hoje.</p>';
+
+                docs.forEach(d => {
+                    const cor = d.tipo.includes("CONTINGÊNCIA") ? "red" : "green";
+                    const item = `
+                        <div class="bg-white p-3 rounded shadow border-l-4 border-${cor}-500 flex justify-between">
+                            <div>
+                                <div class="font-bold text-gray-700">${d.data_legivel ? d.data_legivel.split(',')[1] : "Hoje"}</div>
+                                <div class="text-xs text-gray-500">${d.data_leg
